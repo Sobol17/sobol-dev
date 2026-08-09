@@ -11,8 +11,9 @@ const config = {
 		},
 		// Origin check stays on its default (enabled). Do not weaken it.
 		csp: {
-			// `auto` lets SvelteKit nonce its own inline scripts, so no 'unsafe-inline' for scripts.
-			mode: 'auto',
+			// Hashes instead of nonces: still no 'unsafe-inline' for scripts, and the browser
+			// keeps honouring 'self' for modulepreload hints, which a nonce policy blocks.
+			mode: 'hash',
 			directives: {
 				'default-src': ['self'],
 				'script-src': ['self'],
