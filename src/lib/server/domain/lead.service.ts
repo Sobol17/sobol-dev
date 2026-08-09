@@ -1,5 +1,5 @@
-import { randomInt } from 'node:crypto';
 import type { JobQueue, LeadInput, LeadListItem, RequestMeta } from '$lib/types';
+import { generatePublicId } from '$lib/utils/public-id';
 import { isSpam, scoreSpam } from '$lib/utils/spam';
 import type { UnitOfWork } from '../db/unit-of-work';
 import type { LeadRepository, LeadRow } from '../repositories/lead.repository';
@@ -7,9 +7,6 @@ import { TOPICS } from '../queue/topics';
 import type { Clock } from './clock';
 import { RATE_LIMITS, type RateLimitService } from './rate-limit.service';
 
-/** No vowels and no lookalikes: the id gets read out loud over the phone. */
-const PUBLIC_ID_ALPHABET = '23456789CDFGHJKMNPQRTVWXY';
-const PUBLIC_ID_LENGTH = 6;
 const PUBLIC_ID_ATTEMPTS = 5;
 
 export class LeadService {
@@ -89,12 +86,4 @@ export class LeadService {
 		}
 		throw new Error('could not allocate a unique public lead id');
 	}
-}
-
-export function generatePublicId(): string {
-	let id = '';
-	for (let i = 0; i < PUBLIC_ID_LENGTH; i += 1) {
-		id += PUBLIC_ID_ALPHABET[randomInt(PUBLIC_ID_ALPHABET.length)];
-	}
-	return id;
 }

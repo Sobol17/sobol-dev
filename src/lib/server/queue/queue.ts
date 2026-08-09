@@ -1,7 +1,9 @@
-import { and, eq, inArray, isNotNull, sql } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import type { Db } from '../db/index';
 import { jobs } from '../db/schema';
 import type { JobQueue, PublishOptions } from '$lib/types';
+import type { Clock } from '../domain/clock';
+import { systemClock } from '../domain/clock';
 import { TOPIC_POLICY, type Topic } from './topics';
 
 /**
@@ -11,10 +13,17 @@ import { TOPIC_POLICY, type Topic } from './topics';
  * so a call made inside `db.transaction(...)` commits together with the business data.
  */
 export class SqliteJobQueue implements JobQueue {
-	constructor(private readonly db: Db) {}
+	constructor(
+		private readonly db: Db,
+		private readonly clock: Clock = systemClock
+	) {}
 
 	publish<T extends object>(topic: Topic, payload: T, options: PublishOptions = {}): void {
 		const policy = TOPIC_POLICY[topic];
+
+		// Duplicate work that has not finished yet is dropped, not retried. The check and the
+		// insert cannot interleave: better-sqlite3 is synchronous and the process is the only writer.
+		if (options.uniqueKey && this.hasOpen(options.uniqueKey)) return;
 
 		this.db
 			.insert(jobs)
@@ -22,15 +31,20 @@ export class SqliteJobQueue implements JobQueue {
 				topic,
 				payload: payload as Record<string, unknown>,
 				uniqueKey: options.uniqueKey ?? null,
-				runAt: options.runAt ?? new Date(),
+				runAt: options.runAt ?? this.clock.now(),
 				maxAttempts: options.maxAttempts ?? policy.maxAttempts
 			})
-			// Duplicate work that has not finished yet is dropped, not retried.
-			.onConflictDoNothing({
-				target: jobs.uniqueKey,
-				where: and(isNotNull(jobs.uniqueKey), inArray(jobs.status, ['pending', 'active']))
-			})
 			.run();
+	}
+
+	private hasOpen(uniqueKey: string): boolean {
+		return (
+			this.db
+				.select({ id: jobs.id })
+				.from(jobs)
+				.where(and(eq(jobs.uniqueKey, uniqueKey), inArray(jobs.status, ['pending', 'active'])))
+				.get() !== undefined
+		);
 	}
 
 	/** Test and admin helper: reads a job back without going through the runner. */

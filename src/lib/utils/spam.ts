@@ -31,7 +31,8 @@ export function scoreSpam(signals: SpamSignals): number {
 
 	if (signals.fillDurationMs >= 0 && signals.fillDurationMs < MIN_FILL_MS) score += 30;
 
-	if (signals.recentFromIp >= MAX_LEADS_PER_IP_PER_HOUR) score += 40;
+	// Going over the hourly budget is enough on its own: the lead is stored, not notified.
+	if (signals.recentFromIp >= MAX_LEADS_PER_IP_PER_HOUR) score += SPAM_THRESHOLD;
 
 	const links = signals.input.goal.match(LINK_PATTERN)?.length ?? 0;
 	score += Math.min(links * 10, 20);

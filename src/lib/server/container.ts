@@ -50,7 +50,7 @@ export function buildContainer(): Container {
 	const clock = systemClock;
 
 	const uow = new SqliteUnitOfWork(db.db);
-	const queue = new SqliteJobQueue(db.db);
+	const queue = new SqliteJobQueue(db.db, clock);
 
 	const notifier: Notifier = config.USE_FAKE_CLIENTS
 		? new FakeNotifier()

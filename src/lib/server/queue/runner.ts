@@ -32,6 +32,7 @@ export class JobRunner {
 	private readonly now: () => Date;
 	private running = false;
 	private timer: ReturnType<typeof setTimeout> | null = null;
+	private wake: (() => void) | null = null;
 	private loop: Promise<void> = Promise.resolve();
 
 	constructor(
@@ -145,10 +146,9 @@ export class JobRunner {
 	/** Resolves once the job in flight is finished. Callers use it on SIGTERM. */
 	async stop(): Promise<void> {
 		this.running = false;
-		if (this.timer) {
-			clearTimeout(this.timer);
-			this.timer = null;
-		}
+		// Wake the sleeping loop instead of only clearing the timer: a cleared timer would
+		// leave the sleep promise pending and `await this.loop` would never resolve.
+		this.wake?.();
 		await this.loop;
 		this.log.info('job runner stopped');
 	}
@@ -167,7 +167,14 @@ export class JobRunner {
 
 	private sleep(): Promise<void> {
 		return new Promise((resolve) => {
-			this.timer = setTimeout(resolve, this.pollIntervalMs);
+			const done = () => {
+				if (this.timer) clearTimeout(this.timer);
+				this.timer = null;
+				this.wake = null;
+				resolve();
+			};
+			this.wake = done;
+			this.timer = setTimeout(done, this.pollIntervalMs);
 			this.timer.unref?.();
 		});
 	}

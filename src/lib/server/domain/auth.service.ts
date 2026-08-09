@@ -30,6 +30,7 @@ export class AuthService {
 	 * tell an attacker which half of the pair was right.
 	 */
 	async login(email: string, password: string, context: LoginContext): Promise<LoginResult> {
+		const now = this.clock.now();
 		const failed = this.sessions.countFailedAttempts(
 			context.ipHash,
 			this.rateLimit.windowStart(RATE_LIMITS.login)
@@ -42,14 +43,14 @@ export class AuthService {
 		const valid = user ? await verifyPassword(user.passwordHash, password) : false;
 
 		if (!user || !valid) {
-			this.sessions.recordAttempt(context.ipHash, email, false);
+			this.sessions.recordAttempt(context.ipHash, email, false, now);
 			return { ok: false, reason: 'invalid_credentials' };
 		}
 
-		this.sessions.recordAttempt(context.ipHash, email, true);
+		this.sessions.recordAttempt(context.ipHash, email, true, now);
 
 		const token = createSessionToken();
-		const expiresAt = new Date(this.clock.now().getTime() + SESSION_TTL_MS);
+		const expiresAt = new Date(now.getTime() + SESSION_TTL_MS);
 		this.sessions.create({
 			id: hashSessionToken(token),
 			userId: user.id,

@@ -49,8 +49,9 @@ export class SessionRepository {
 		return this.db.select().from(users).where(eq(users.email, email)).get();
 	}
 
-	recordAttempt(ipHash: string, email: string | null, succeeded: boolean): void {
-		this.db.insert(authAttempts).values({ ipHash, email, succeeded }).run();
+	/** The caller supplies the timestamp so the rate-limit window follows the service clock. */
+	recordAttempt(ipHash: string, email: string | null, succeeded: boolean, at: Date): void {
+		this.db.insert(authAttempts).values({ ipHash, email, succeeded, createdAt: at }).run();
 	}
 
 	countFailedAttempts(ipHash: string, since: Date): number {
