@@ -1,42 +1,53 @@
-# sv
+# sobol-portfolio
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+Лендинг с формой заявки плюс админка портфолио. SvelteKit, TypeScript, Drizzle ORM, SQLite,
+собственная очередь в таблице `jobs` того же файла БД.
 
-## Creating a project
+Единственный источник истины по архитектуре — [`tech.md`](./tech.md). Правила работы — [`CLAUDE.md`](./CLAUDE.md).
 
-If you're seeing this, you've probably already done this step. Congrats!
+## Запуск
 
-```sh
-# create a new project
-npx sv create my-app
+```bash
+pnpm install
+cp .env.example .env          # заполнить SESSION_SECRET и IP_HASH_SALT (по 32+ символа)
+pnpm db:seed                  # демо-данные и админ
+pnpm dev
 ```
 
-To recreate this project with the same configuration:
+Приложение падает на старте, если env неполный. Секреты генерятся так:
 
-```sh
-# recreate this project
-npx sv@0.17.0 create --template minimal --types ts --add prettier eslint vitest="usages:unit" playwright tailwindcss="plugins:typography" sveltekit-adapter="adapter:node" --no-download-check --no-install .
+```bash
+openssl rand -hex 32
 ```
 
-## Developing
+## Команды
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+| Команда                       | Что делает                                              |
+| ----------------------------- | ------------------------------------------------------- |
+| `pnpm dev`                    | дев-сервер                                              |
+| `pnpm build` / `pnpm preview` | сборка adapter-node и локальный прогон                  |
+| `pnpm lint`                   | prettier + eslint                                       |
+| `pnpm check`                  | svelte-check                                            |
+| `pnpm exec vitest run`        | юнит, контрактные и property-тесты                      |
+| `pnpm test:e2e`               | Playwright: собирает, готовит свою БД, поднимает сервер |
+| `pnpm db:generate`            | миграция из `schema.ts`, руками SQL не пишем            |
+| `pnpm db:seed`                | демо-кейсы, заявки, КП и админ                          |
+| `pnpm db:create-admin`        | создать или обновить админа                             |
 
-```sh
-npm run dev
+## Что важно знать
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+**Env читается на сборке.** `$env/static/private` инлайнится в бандл, поэтому `pnpm build`
+должен идти с тем же окружением, с которым потом стартует сервер. Playwright поэтому собирает
+проект сам, внутри своего `webServer`.
 
-## Building
+**Писатель в БД один.** Воркер очереди крутится внутри процесса приложения, стартует в
+`hooks.server.ts` и останавливается по `SIGTERM`. Второй процесс на тот же файл не запускать.
 
-To create a production version of your app:
+**Джобы идемпотентны.** Раннер возвращает подвисшие `active` в работу при старте, поэтому
+повторное исполнение — штатный сценарий.
 
-```sh
-npm run build
-```
+**Заголовки на статике.** Прогретые пререндером страницы отдаются как файлы и не проходят через
+`hooks.server.ts`. Заголовки безопасности для них ставит прокси.
 
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+**`kitchen-sink`.** Витрина всех примитивов `$lib/ui`, доступна только вне продакшена:
+[`/kitchen-sink`](http://localhost:5173/kitchen-sink).
