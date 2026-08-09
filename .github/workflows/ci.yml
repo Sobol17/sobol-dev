@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # No services and no docker: the whole gate runs on one runner.
+    env:
+      DATABASE_FILE: ./var/ci/app.db
+      PUBLIC_SITE_URL: http://localhost:4173
+      SESSION_SECRET: ci-session-secret-not-used-in-production-000
+      IP_HASH_SALT: ci-ip-hash-salt-not-used-in-production-0000
+      UPLOADS_DIR: ./var/ci/uploads
+      USE_FAKE_CLIENTS: 'true'
+      TELEGRAM_OWNER_CHAT_ID: fake-owner-chat
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Types
+        run: pnpm check
+
+      - name: Migrations apply to a clean database
+        run: pnpm exec tsx scripts/migrate-check.ts
+
+      - name: Schema matches the committed migrations
+        run: |
+          pnpm exec drizzle-kit generate --name drift-check
+          if [ -n "$(git status --porcelain src/lib/server/db/migrations)" ]; then
+            echo "schema.ts changed without a generated migration"
+            git status --porcelain src/lib/server/db/migrations
+            exit 1
+          fi
+
+      - name: Unit, contract and property tests
+        run: pnpm exec vitest run
+
+      - name: Build
+        run: pnpm build
+
+      - name: Install browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: End-to-end tests
+        run: pnpm exec playwright test
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7
