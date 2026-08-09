@@ -34,6 +34,23 @@ export class LeadRepository {
 		return row?.count ?? 0;
 	}
 
+	count(): number {
+		const row = this.db
+			.select({ count: sql<number>`count(*)` })
+			.from(leads)
+			.get();
+		return row?.count ?? 0;
+	}
+
+	countByStatus(status: LeadRow['status']): number {
+		const row = this.db
+			.select({ count: sql<number>`count(*)` })
+			.from(leads)
+			.where(eq(leads.status, status))
+			.get();
+		return row?.count ?? 0;
+	}
+
 	listRecent(limit = 20): LeadListItem[] {
 		return this.db
 			.select()

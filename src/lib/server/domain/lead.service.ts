@@ -77,6 +77,10 @@ export class LeadService {
 		return this.leads.listRecent(limit);
 	}
 
+	stats(): { total: number; fresh: number } {
+		return { total: this.leads.count(), fresh: this.leads.countByStatus('new') };
+	}
+
 	/** Collisions are astronomically unlikely but the column is unique, so retry instead of throwing. */
 	private nextPublicId(): string {
 		for (let attempt = 0; attempt < PUBLIC_ID_ATTEMPTS; attempt += 1) {

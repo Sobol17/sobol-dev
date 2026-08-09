@@ -14,10 +14,10 @@ export function hashSessionToken(token: string): string {
 	return createHash('sha256').update(token).digest('hex');
 }
 
+/** `secure` is left to SvelteKit: it sets it everywhere except http://localhost. */
 export const sessionCookieOptions = {
 	path: '/',
 	httpOnly: true,
 	sameSite: 'lax',
-	secure: true,
 	maxAge: SESSION_TTL_MS / 1000
 } as const;
