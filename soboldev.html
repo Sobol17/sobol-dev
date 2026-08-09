@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SobolDev — сайты, мобильные приложения и Telegram Mini Apps</title>
+<meta name="description" content="Студия разработки SobolDev: fullstack-веб, мобильные приложения на Flutter и React Native, Telegram Mini Apps. Смета и коммерческое предложение в течение дня.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        /* токены темы — значения живут в CSS-переменных ниже */
+        paper:      'rgb(var(--c-bg) / <alpha-value>)',
+        surface:    'rgb(var(--c-surface) / <alpha-value>)',
+        ink:        'rgb(var(--c-ink) / <alpha-value>)',
+        muted:      'rgb(var(--c-muted) / <alpha-value>)',
+        line:       'rgb(var(--c-line) / <alpha-value>)',
+        accentSoft: 'rgb(var(--c-accent-soft) / <alpha-value>)',
+        invert:     'rgb(var(--c-invert) / <alpha-value>)',
+        invertfg:   'rgb(var(--c-invert-fg) / <alpha-value>)',
+        /* всегда тёмные: макеты устройств, секция кейсов, карточка брифа */
+        night:  '#0D0D12',
+        night2: '#15151E',
+        accent: '#4A3AFF'
+      },
+      fontFamily: {
+        display: ['Unbounded', 'system-ui', 'sans-serif'],
+        sans:    ['Inter', 'system-ui', 'sans-serif'],
+        mono:    ['"JetBrains Mono"', 'ui-monospace', 'monospace']
+      }
+    }
+  }
+}
+</script>
+
+<script>
+/* По умолчанию светлая тема. Тёмная включается, только если посетитель
+   сам её выбрал в прошлый раз. Ставится до отрисовки, иначе моргнёт. */
+(function(){
+  try{
+    if(localStorage.getItem('sd-theme') === 'dark') document.documentElement.classList.add('dark');
+  }catch(e){}
+})();
+</script>
+
+<style>
+  html { scroll-behavior: smooth; scroll-padding-top: 110px; }
+  body { -webkit-font-smoothing: antialiased; }
+
+  /* ---------- Палитра тем ---------- */
+  :root{
+    --c-bg:          241 242 245;
+    --c-surface:     255 255 255;
+    --c-ink:          13  13  18;
+    --c-muted:       108 108 122;
+    --c-line:        228 229 234;
+    --c-accent-soft: 233 231 255;
+    --c-invert:       13  13  18;
+    --c-invert-fg:   255 255 255;
+    color-scheme: light;
+  }
+  .dark{
+    --c-bg:           10  10  14;
+    --c-surface:      22  22  30;
+    --c-ink:         240 240 246;
+    --c-muted:       150 150 166;
+    --c-line:         40  40  52;
+    --c-accent-soft:  37  32  84;
+    --c-invert:      255 255 255;
+    --c-invert-fg:    13  13  18;
+    color-scheme: dark;
+  }
+  body, header nav, section, article, aside, footer, input, textarea, .modal-panel, ol > li, .chip {
+    transition: background-color .3s ease, border-color .3s ease;
+  }
+
+  /* Переключатель темы: бегунок и смена иконки */
+  .theme-knob{ transition: transform .28s cubic-bezier(.2,.8,.2,1); }
+  .dark .theme-knob{ transform: translateX(20px); }
+  .icon-sun{ display:none; }
+  .dark .icon-sun{ display:block; }
+  .dark .icon-moon{ display:none; }
+
+  /* Бегущая строка стека */
+  @keyframes slide { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+  .marquee-track{ display:flex; width:max-content; animation:slide 38s linear infinite; }
+  .marquee:hover .marquee-track{ animation-play-state:paused; }
+
+  /* Появление при скролле */
+  .reveal{ opacity:0; transform:translateY(18px); transition:opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1); }
+  .reveal.in{ opacity:1; transform:none; }
+
+  /* Плейсхолдер скриншота: если файла нет — остаётся аккуратная заглушка */
+  .shot{ position:relative; overflow:hidden; background:
+      radial-gradient(120% 90% at 20% 0%, #2A2A3D 0%, #14141C 55%, #0D0D12 100%); }
+  .shot img{ position:relative; z-index:2; display:block; width:100%; height:100%; object-fit:cover; }
+  .shot-ph{ position:absolute; inset:0; z-index:1; display:grid; place-items:center; gap:8px; text-align:center; padding:16px; }
+
+  /* Модалка */
+  .modal{ opacity:0; visibility:hidden; transition:opacity .28s ease, visibility .28s; }
+  .modal.open{ opacity:1; visibility:visible; }
+  .modal-panel{ transform:translateY(24px) scale(.985); transition:transform .34s cubic-bezier(.2,.8,.2,1); }
+  .modal.open .modal-panel{ transform:none; }
+  .no-scroll{ overflow:hidden; }
+
+  /* Чипы конструктора брифа */
+  .chip{ transition:all .16s ease; }
+  .chip[aria-pressed="true"]{
+    background: rgb(var(--c-invert));
+    color: rgb(var(--c-invert-fg));
+    border-color: rgb(var(--c-invert));
+  }
+  .chip[aria-pressed="true"] .dot{ background:#4A3AFF; }
+
+  details > summary{ list-style:none; cursor:pointer; }
+  details > summary::-webkit-details-marker{ display:none; }
+  details[open] .faq-sign{ transform:rotate(45deg); }
+
+  :focus-visible{ outline:2px solid #4A3AFF; outline-offset:3px; border-radius:6px; }
+
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior:auto; }
+    .marquee-track{ animation:none; }
+    .reveal{ opacity:1; transform:none; transition:none; }
+    .modal, .modal-panel{ transition:none; }
+  }
+</style>
+</head>
+
+<body class="bg-paper text-ink font-sans antialiased">
+
+<!-- ============ НАВИГАЦИЯ ============ -->
+<header class="fixed top-0 inset-x-0 z-40 px-4 pt-4">
+  <nav class="mx-auto max-w-[1180px] rounded-[22px] border border-line bg-surface/80 backdrop-blur-xl shadow-[0_8px_30px_-12px_rgba(13,13,18,.18)]">
+    <div class="flex items-center justify-between gap-4 px-4 sm:px-5 py-3">
+
+      <a href="#top" class="flex items-center gap-2.5 shrink-0">
+        <svg viewBox="0 0 24 24" class="w-6 h-6 text-ink" fill="currentColor" aria-hidden="true">
+          <path d="M12 1.5c.55 5.4 4.6 9.45 10 10-5.4.55-9.45 4.6-10 10-.55-5.4-4.6-9.45-10-10 5.4-.55 9.45-4.6 10-10z"/>
+        </svg>
+        <span class="font-display font-700 text-[17px] tracking-[-.02em]" style="font-weight:700">SobolDev</span>
+      </a>
+
+      <ul class="hidden md:flex items-center gap-7 text-[14px] text-ink/75">
+        <li><a class="hover:text-ink transition" href="#services">Услуги</a></li>
+        <li><a class="hover:text-ink transition" href="#cases">Кейсы</a></li>
+        <li><a class="hover:text-ink transition" href="#process">Процесс</a></li>
+        <li><a class="hover:text-ink transition" href="#faq">Вопросы</a></li>
+      </ul>
+
+      <div class="flex items-center gap-2">
+        <button id="themeBtn" type="button" role="switch" aria-checked="false"
+                class="relative h-6 w-11 shrink-0 rounded-full border border-line bg-paper transition hover:border-ink/30"
+                aria-label="Тёмная тема">
+          <span class="theme-knob absolute left-[2px] top-[2px] grid h-[18px] w-[18px] place-items-center rounded-full bg-invert text-invertfg">
+            <svg class="icon-moon h-[11px] w-[11px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20.5 14.3A8.6 8.6 0 0 1 9.7 3.5a8.6 8.6 0 1 0 10.8 10.8z"/>
+            </svg>
+            <svg class="icon-sun h-[11px] w-[11px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="4.5"/>
+              <path d="M12 1.8v2.4M12 19.8v2.4M1.8 12h2.4M19.8 12h2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/>
+            </svg>
+          </span>
+        </button>
+
+        <a href="#brief" class="hidden sm:inline-flex items-center rounded-full bg-accent px-5 py-2.5 text-[14px] font-medium text-white transition hover:bg-invert hover:text-invertfg">
+          Получить КП
+        </a>
+        <button id="navBtn" class="md:hidden w-10 h-10 grid place-items-center rounded-full border border-line" aria-label="Меню" aria-expanded="false">
+          <span class="block w-4 h-[1.5px] bg-ink relative before:absolute before:content-[''] before:w-4 before:h-[1.5px] before:bg-ink before:-top-[5px] after:absolute after:content-[''] after:w-4 after:h-[1.5px] after:bg-ink after:top-[5px]"></span>
+        </button>
+      </div>
+    </div>
+
+    <div id="navMenu" class="hidden md:hidden border-t border-line px-5 py-4">
+      <ul class="grid gap-3 text-[15px]">
+        <li><a class="block py-1" href="#services">Услуги</a></li>
+        <li><a class="block py-1" href="#cases">Кейсы</a></li>
+        <li><a class="block py-1" href="#process">Процесс</a></li>
+        <li><a class="block py-1" href="#faq">Вопросы</a></li>
+        <li><a class="mt-1 block rounded-full bg-accent px-5 py-3 text-center text-white" href="#brief">Получить КП</a></li>
+      </ul>
+    </div>
+  </nav>
+</header>
+
+<!-- ============ ГЛАВНЫЙ ЭКРАН ============ -->
+<section id="top" class="relative overflow-hidden pt-36 pb-16 md:pt-44 md:pb-24">
+  <!-- индиго-пятна на фоне -->
+  <div class="pointer-events-none absolute -top-24 -left-32 h-[420px] w-[420px] rounded-full bg-accentSoft blur-[90px]"></div>
+  <div class="pointer-events-none absolute top-40 -right-24 h-[380px] w-[380px] rounded-full bg-accentSoft blur-[90px]"></div>
+
+  <div class="relative mx-auto max-w-[1180px] px-5">
+
+    <p class="mb-6 flex items-center justify-center gap-2 font-mono text-[11px] uppercase tracking-[.18em] text-muted">
+      <span class="inline-block h-1.5 w-1.5 rounded-full bg-accent"></span>
+      Студия разработки · беру 2 проекта в месяц
+    </p>
+
+    <h1 class="mx-auto max-w-[15ch] text-center font-display text-[40px] leading-[1.02] tracking-[-.035em] sm:text-[58px] md:text-[76px]" style="font-weight:700">
+      Сайты, приложения и <span class="text-accent">Telegram Mini&nbsp;Apps</span>
+    </h1>
+
+    <p class="mx-auto mt-7 max-w-[52ch] text-center text-[16px] leading-relaxed text-muted md:text-[18px]">
+      SobolDev — небольшая студия. Веду проект от брифа до релиза: интерфейс, код, публикация в сторах и поддержка. Заявку разбираю в день обращения и присылаю смету с фиксированной ценой.
+    </p>
+
+    <div class="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+      <a href="#brief" class="w-full rounded-full bg-invert px-7 py-4 text-center text-[15px] font-medium text-invertfg transition hover:bg-accent hover:text-white sm:w-auto">
+        Собрать бриф за 40 секунд
+      </a>
+      <a href="#cases" class="w-full rounded-full border border-ink/15 bg-surface px-7 py-4 text-center text-[15px] font-medium transition hover:border-ink/40 sm:w-auto">
+        Смотреть кейсы
+      </a>
+    </div>
+
+    <!-- Три артефакта: то, что я делаю, показано предметно -->
+    <div class="reveal mt-16 grid items-end gap-5 md:mt-20 md:grid-cols-[1.35fr_1fr_1fr]">
+
+      <!-- Веб -->
+      <figure class="group">
+        <div class="overflow-hidden rounded-2xl border border-line bg-surface shadow-[0_24px_60px_-30px_rgba(13,13,18,.4)] transition duration-500 group-hover:-translate-y-1">
+          <div class="flex items-center gap-1.5 border-b border-line px-4 py-3">
+            <span class="h-2.5 w-2.5 rounded-full bg-line"></span>
+            <span class="h-2.5 w-2.5 rounded-full bg-line"></span>
+            <span class="h-2.5 w-2.5 rounded-full bg-line"></span>
+            <span class="ml-3 rounded-md bg-paper px-3 py-1 font-mono text-[10px] text-muted">soboldev.ru</span>
+          </div>
+          <div class="space-y-3 p-6">
+            <div class="h-2.5 w-2/3 rounded-full bg-ink/85"></div>
+            <div class="h-2.5 w-1/3 rounded-full bg-accent"></div>
+            <div class="h-1.5 w-full rounded-full bg-line"></div>
+            <div class="h-1.5 w-5/6 rounded-full bg-line"></div>
+            <div class="grid grid-cols-3 gap-2 pt-3">
+              <div class="h-14 rounded-lg bg-paper"></div>
+              <div class="h-14 rounded-lg bg-paper"></div>
+              <div class="h-14 rounded-lg bg-accentSoft"></div>
+            </div>
+          </div>
+        </div>
+        <figcaption class="mt-3 font-mono text-[11px] uppercase tracking-[.14em] text-muted">Веб · Fullstack</figcaption>
+      </figure>
+
+      <!-- Мобильное -->
+      <figure class="group">
+        <div class="mx-auto w-full max-w-[220px] overflow-hidden rounded-[28px] border-[6px] border-night bg-night shadow-[0_24px_60px_-28px_rgba(13,13,18,.55)] transition duration-500 group-hover:-translate-y-1">
+          <div class="relative bg-night2 px-3.5 pb-4 pt-6">
+            <span class="absolute left-1/2 top-2 h-1.5 w-12 -translate-x-1/2 rounded-full bg-white/25"></span>
+            <div class="mb-4 flex items-center gap-2">
+              <span class="h-8 w-8 rounded-full bg-accent"></span>
+              <span class="h-2 w-16 rounded-full bg-white/25"></span>
+            </div>
+            <div class="mb-3 h-16 rounded-xl bg-white/10"></div>
+            <div class="space-y-2">
+              <div class="h-8 rounded-lg bg-white/[.07]"></div>
+              <div class="h-8 rounded-lg bg-white/[.07]"></div>
+              <div class="h-8 rounded-lg bg-white/[.07]"></div>
+            </div>
+            <div class="mt-4 h-9 rounded-full bg-accent/90"></div>
+          </div>
+        </div>
+        <figcaption class="mt-3 text-center font-mono text-[11px] uppercase tracking-[.14em] text-muted">iOS · Android</figcaption>
+      </figure>
+
+      <!-- Telegram Mini App -->
+      <figure class="group">
+        <div class="mx-auto w-full max-w-[220px] overflow-hidden rounded-[28px] border-[6px] border-night bg-white shadow-[0_24px_60px_-28px_rgba(13,13,18,.55)] transition duration-500 group-hover:-translate-y-1">
+          <div class="flex items-center justify-between bg-[#527DA3] px-3 py-2">
+            <span class="font-mono text-[9px] text-white/90">Mini App</span>
+            <span class="h-2 w-2 rounded-full bg-white/60"></span>
+          </div>
+          <div class="p-3.5">
+            <div class="mb-3 grid grid-cols-2 gap-2">
+              <div class="h-16 rounded-lg bg-[#F1F2F5]"></div>
+              <div class="h-16 rounded-lg bg-[#F1F2F5]"></div>
+              <div class="h-16 rounded-lg bg-[#E9E7FF]"></div>
+              <div class="h-16 rounded-lg bg-[#F1F2F5]"></div>
+            </div>
+            <div class="h-9 rounded-lg bg-[#527DA3]"></div>
+          </div>
+        </div>
+        <figcaption class="mt-3 text-center font-mono text-[11px] uppercase tracking-[.14em] text-muted">Внутри Telegram</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ============ СТЕК ============ -->
+<section class="marquee overflow-hidden border-y border-line bg-surface py-5">
+  <div class="marquee-track gap-10 px-5">
+    <!-- список продублирован — так строка едет без разрывов -->
+    <div class="flex shrink-0 items-center gap-10 pr-10 font-mono text-[13px] uppercase tracking-[.12em] text-muted">
+      <span>Flutter</span><span class="text-accent">✦</span><span>React Native</span><span class="text-accent">✦</span><span>Next.js</span><span class="text-accent">✦</span><span>TypeScript</span><span class="text-accent">✦</span><span>Telegram Bot API</span><span class="text-accent">✦</span><span>TON Connect</span><span class="text-accent">✦</span><span>Supabase</span><span class="text-accent">✦</span><span>PostgreSQL</span><span class="text-accent">✦</span><span>Node.js</span><span class="text-accent">✦</span><span>Firebase</span><span class="text-accent">✦</span>
+    </div>
+    <div class="flex shrink-0 items-center gap-10 pr-10 font-mono text-[13px] uppercase tracking-[.12em] text-muted" aria-hidden="true">
+      <span>Flutter</span><span class="text-accent">✦</span><span>React Native</span><span class="text-accent">✦</span><span>Next.js</span><span class="text-accent">✦</span><span>TypeScript</span><span class="text-accent">✦</span><span>Telegram Bot API</span><span class="text-accent">✦</span><span>TON Connect</span><span class="text-accent">✦</span><span>Supabase</span><span class="text-accent">✦</span><span>PostgreSQL</span><span class="text-accent">✦</span><span>Node.js</span><span class="text-accent">✦</span><span>Firebase</span><span class="text-accent">✦</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ УСЛУГИ ============ -->
+<section id="services" class="py-20 md:py-28">
+  <div class="mx-auto max-w-[1180px] px-5">
+
+    <div class="reveal mb-12 flex flex-col gap-5 md:mb-16 md:flex-row md:items-end md:justify-between">
+      <div>
+        <p class="mb-4 font-mono text-[11px] uppercase tracking-[.18em] text-muted">Направления</p>
+        <h2 class="max-w-[16ch] font-display text-[32px] leading-[1.08] tracking-[-.03em] sm:text-[44px]" style="font-weight:700">Что я беру в работу</h2>
+      </div>
+      <p class="max-w-[38ch] text-[15px] leading-relaxed text-muted">
+        Три направления, между которыми легко переключаться: у сайта, приложения и мини-аппа общий бэкенд и одна дизайн-система.
+      </p>
+    </div>
+
+    <div class="grid gap-5 md:grid-cols-3">
+
+      <!-- Карточка 1 -->
+      <article class="reveal group flex flex-col rounded-3xl border border-line bg-surface p-7 transition duration-300 hover:-translate-y-1 hover:shadow-[0_30px_60px_-40px_rgba(13,13,18,.5)]">
+        <div class="mb-7 grid h-16 w-16 place-items-center rounded-2xl bg-accentSoft">
+          <svg viewBox="0 0 32 32" class="h-8 w-8 text-accent" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="6" width="26" height="20" rx="3"/><path d="M3 12h26"/><path d="M11 18l-3 3 3 3M21 18l3 3-3 3"/>
+          </svg>
+        </div>
+        <h3 class="mb-3 font-display text-[20px] leading-tight tracking-[-.02em]" style="font-weight:600">Веб-разработка</h3>
+        <p class="mb-6 text-[15px] leading-relaxed text-muted">
+          Лендинги, корпоративные сайты, интернет-магазины и админ-панели. Делаю fullstack: интерфейс, серверную часть, админку и CMS, чтобы вы правили тексты сами.
+        </p>
+        <ul class="mb-7 space-y-2 text-[14px] text-ink/80">
+          <li class="flex gap-2.5"><span class="text-accent">✦</span> Адаптив от 360 px и PageSpeed 90+</li>
+          <li class="flex gap-2.5"><span class="text-accent">✦</span> Формы, оплата, интеграция с CRM</li>
+          <li class="flex gap-2.5"><span class="text-accent">✦</span> SEO-разметка и аналитика на старте</li>
+        </ul>
+        <div class="mt-auto flex items-center justify-between border-t border-line pt-5 font-mono text-[12px]">
+          <!-- ЗАМЕНИТЕ цены и сроки на свои -->
+          <span class="text-muted">от 2 недель</span>
+          <span class="rounded-full bg-paper px-3 py-1.5">от 60 000 ₽</span>
+        </div>
+      </article>
+
+      <!-- Карточка 2 -->
+      <article class="reveal group flex flex-col rounded-3xl border border-line bg-surface p-7 transition duration-300 hover:-translate-y-1 hover:shadow-[0_30px_60px_-40px_rgba(13,13,18,.5)]">
+        <div class="mb-7 grid h-16 w-16 place-items-center rounded-2xl bg-accentSoft">
+          <svg viewBox="0 0 32 32" class="h-8 w-8 text-accent" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="3" width="14" height="26" rx="3.5"/><path d="M14 25h4"/><path d="M9 8h14"/>
+          </svg>
+        </div>
+        <h3 class="mb-3 font-display text-[20px] leading-tight tracking-[-.02em]" style="font-weight:600">Мобильные приложения</h3>
+        <p class="mb-6 text-[15px] leading-relaxed text-muted">
+          Flutter или React Native — один код на iOS и Android. Беру на себя сборки, тестовые релизы и публикацию в App Store и Google Play.
+        </p>
+        <ul class="mb-7 space-y-2 text-[14px] text-ink/80">
+          <li class="flex gap-2.5"><span class="text-accent">✦</span> Push-уведомления, гео, камера, офлайн</li>
+          <li class="flex gap-2.5"><span class="text-accent">✦</span> Подписки и покупки внутри приложения</li>
+          <li class="flex gap-2.5"><span class="text-accent">✦</span> Прохожу ревью сторов и правки после него</li>
+        </ul>
+        <div class="mt-auto flex items-center justify-between border-t border-line pt-5 font-mono text-[12px]">
+          <span class="text-muted">от 6 недель</span>
+          <span class="rounded-full bg-paper px-3 py-1.5">от 250 000 ₽</span>
+        </div>
+      </article>
+
+      <!-- Карточка 3 -->
+      <article class="reveal group flex flex-col rounded-3xl border border-line bg-surface p-7 transition duration-300 hover:-translate-y-1 hover:shadow-[0_30px_60px_-40px_rgba(13,13,18,.5)]">
+        <div class="mb-7 grid h-16 w-16 place-items-center rounded-2xl bg-accentSoft">
+          <svg viewBox="0 0 32 32" class="h-8 w-8 text-accent" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 15.5 28 5l-4 22-7.5-6.5L11 25l-.5-7z"/><path d="M10.5 18 24 8"/>
+          </svg>
+        </div>
+        <h3 class="mb-3 font-display text-[20px] leading-tight tracking-[-.02em]" style="font-weight:600">Telegram Mini Apps</h3>
+        <p class="mb-6 text-[15px] leading-relaxed text-muted">
+          Магазин, запись, личный кабинет или игра прямо в чате. Пользователю не нужно ничего скачивать — он открывает приложение из бота.
+        </p>
+        <ul class="mb-7 space-y-2 text-[14px] text-ink/80">
+          <li class="flex gap-2.5"><span class="text-accent">✦</span> Оплата: Telegram Stars, ЮKassa, TON</li>
+          <li class="flex gap-2.5"><span class="text-accent">✦</span> Бот, рассылки и админка в одном проекте</li>
+          <li class="flex gap-2.5"><span class="text-accent">✦</span> Нативная тема Telegram и haptic-отклик</li>
+        </ul>
+        <div class="mt-auto flex items-center justify-between border-t border-line pt-5 font-mono text-[12px]">
+          <span class="text-muted">от 3 недель</span>
+          <span class="rounded-full bg-paper px-3 py-1.5">от 120 000 ₽</span>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ КЕЙСЫ (тёмная секция) ============ -->
+<section id="cases" class="bg-night py-20 text-white md:py-28">
+  <div class="mx-auto max-w-[1180px] px-5">
+
+    <div class="reveal mb-12 flex flex-col gap-5 md:mb-16 md:flex-row md:items-end md:justify-between">
+      <div>
+        <p class="mb-4 font-mono text-[11px] uppercase tracking-[.18em] text-white/45">Работы</p>
+        <h2 class="max-w-[18ch] font-display text-[32px] leading-[1.08] tracking-[-.03em] sm:text-[44px]" style="font-weight:700">Кейсы</h2>
+      </div>
+      <p class="max-w-[38ch] text-[15px] leading-relaxed text-white/55">
+        Нажмите на карточку — откроется разбор: задача, что сделал, стек, сроки и результат.
+      </p>
+    </div>
+
+    <div id="caseGrid" class="grid gap-5 sm:grid-cols-2"></div>
+
+    <p class="reveal mt-10 text-center text-[15px] text-white/50">
+      Есть ещё 8 проектов под NDA — покажу на созвоне.
+    </p>
+  </div>
+</section>
+
+<!-- ============ ПРОЦЕСС ============ -->
+<section id="process" class="py-20 md:py-28">
+  <div class="mx-auto max-w-[1180px] px-5">
+
+    <div class="reveal mb-12 md:mb-16">
+      <p class="mb-4 font-mono text-[11px] uppercase tracking-[.18em] text-muted">Как идёт работа</p>
+      <h2 class="max-w-[20ch] font-display text-[32px] leading-[1.08] tracking-[-.03em] sm:text-[44px]" style="font-weight:700">Четыре шага от заявки до релиза</h2>
+    </div>
+
+    <ol class="grid gap-px overflow-hidden rounded-3xl border border-line bg-line md:grid-cols-4">
+      <li class="reveal bg-surface p-7">
+        <span class="font-mono text-[12px] text-accent">01</span>
+        <h3 class="mb-3 mt-4 font-display text-[18px] tracking-[-.02em]" style="font-weight:600">Бриф</h3>
+        <p class="text-[14px] leading-relaxed text-muted">Заполняете форму ниже за минуту. Если что-то непонятно — созваниваемся на 20 минут и разбираем задачу вместе.</p>
+        <p class="mt-4 font-mono text-[12px] text-muted">1 день</p>
+      </li>
+      <li class="reveal bg-surface p-7">
+        <span class="font-mono text-[12px] text-accent">02</span>
+        <h3 class="mb-3 mt-4 font-display text-[18px] tracking-[-.02em]" style="font-weight:600">Смета и план</h3>
+        <p class="text-[14px] leading-relaxed text-muted">Присылаю КП: список экранов, стек, сроки по неделям и фиксированную цену. Подписываем договор, беру предоплату 30%.</p>
+        <p class="mt-4 font-mono text-[12px] text-muted">2–3 дня</p>
+      </li>
+      <li class="reveal bg-surface p-7">
+        <span class="font-mono text-[12px] text-accent">03</span>
+        <h3 class="mb-3 mt-4 font-display text-[18px] tracking-[-.02em]" style="font-weight:600">Разработка</h3>
+        <p class="text-[14px] leading-relaxed text-muted">Работаю неделями: каждую пятницу — сборка, которую можно открыть и потрогать. Правки вносим по ходу, а не в конце.</p>
+        <p class="mt-4 font-mono text-[12px] text-muted">2–10 недель</p>
+      </li>
+      <li class="reveal bg-surface p-7">
+        <span class="font-mono text-[12px] text-accent">04</span>
+        <h3 class="mb-3 mt-4 font-display text-[18px] tracking-[-.02em]" style="font-weight:600">Релиз и поддержка</h3>
+        <p class="text-[14px] leading-relaxed text-muted">Выкладываю на ваши серверы и в сторы, передаю доступы и документацию. Месяц правлю баги бесплатно.</p>
+        <p class="mt-4 font-mono text-[12px] text-muted">30 дней гарантии</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ БРИФ / ЗАЯВКА ============ -->
+<section id="brief" class="relative overflow-hidden bg-surface py-20 md:py-28">
+  <div class="pointer-events-none absolute -bottom-32 -left-24 h-[420px] w-[420px] rounded-full bg-accentSoft blur-[100px]"></div>
+
+  <div class="relative mx-auto max-w-[1180px] px-5">
+
+    <div class="reveal mb-12 max-w-[46ch] md:mb-16">
+      <p class="mb-4 font-mono text-[11px] uppercase tracking-[.18em] text-muted">Заявка</p>
+      <h2 class="font-display text-[32px] leading-[1.08] tracking-[-.03em] sm:text-[44px]" style="font-weight:700">Соберите бриф — пришлю&nbsp;КП</h2>
+      <p class="mt-5 text-[16px] leading-relaxed text-muted">Четыре вопроса и контакт. Ничего лишнего: остальное уточню сам, когда буду считать смету.</p>
+    </div>
+
+    <div class="max-w-[760px]">
+
+      <!-- Левая колонка: вопросы -->
+      <form id="briefForm" class="reveal space-y-9" novalidate>
+
+        <fieldset data-group="type">
+          <legend class="mb-4 flex items-baseline gap-3">
+            <span class="font-mono text-[12px] text-accent">01</span>
+            <span class="text-[16px] font-medium">Что нужно сделать?</span>
+          </legend>
+          <div class="flex flex-wrap gap-2.5">
+            <button type="button" class="chip inline-flex items-center gap-2 rounded-full border border-line bg-surface px-5 py-3 text-[14px]" data-value="Сайт" aria-pressed="false"><span class="dot h-1.5 w-1.5 rounded-full bg-line"></span>Сайт</button>
+            <button type="button" class="chip inline-flex items-center gap-2 rounded-full border border-line bg-surface px-5 py-3 text-[14px]" data-value="Мобильное приложение" aria-pressed="false"><span class="dot h-1.5 w-1.5 rounded-full bg-line"></span>Мобильное приложение</button>
+            <button type="button" class="chip inline-flex items-center gap-2 rounded-full border border-line bg-surface px-5 py-3 text-[14px]" data-value="Telegram Mini App" aria-pressed="false"><span class="dot h-1.5 w-1.5 rounded-full bg-line"></span>Telegram Mini App</button>
+            <button type="button" class="chip inline-flex items-center gap-2 rounded-full border border-line bg-surface px-5 py-3 text-[14px]" data-value="Пока не решил" aria-pressed="false"><span class="dot h-1.5 w-1.5 rounded-full bg-line"></span>Пока не решил</button>
+          </div>
+        </fieldset>
+
+        <fieldset data-group="ready">
+          <legend class="mb-4 flex items-baseline gap-3">
+            <span class="font-mono text-[12px] text-accent">02</span>
+            <span class="text-[16px] font-medium">Что уже готово?</span>
+          </legend>
+          <div class="flex flex-wrap gap-2.5">
+            <button type="button" class="chip inline-flex items-center gap-2 rounded-full border border-line bg-surface px-5 py-3 text-[14px]" data-value="Только идея" aria-pressed="false"><span class="dot h-1.5 w-1.5 rounded-full bg-line"></span>Только идея</button>
+            <button type="button" class="chip inline-flex items-center gap-2 rounded-full border border-line bg-surface px-5 py-3 text-[14px]" data-value="Есть ТЗ" aria-pressed="false"><span class="dot h-1.5 w-1.5 rounded-full bg-line"></span>Есть ТЗ</button>
+            <button type="button" class="chip inline-flex items-center gap-2 rounded-full border border-line bg-surface px-5 py-3 text-[14px]" data-value="Есть дизайн в Figma" aria-pressed="false"><span class="dot h-1.5 w-1.5 rounded-full bg-line"></span>Есть дизайн в Figma</button>
+            <button type="button" class="chip inline-flex items-center gap-2 rounded-full border border-line bg-surface px-5 py-3 text-[14px]" data-value="Нужно доделать проект" aria-pressed="false"><span class="dot h-1.5 w-1.5 rounded-full bg-line"></span>Нужно доделать проект</button>
+          </div>
+        </fieldset>
+
+        <fieldset data-group="budget">
+          <legend class="mb-4 flex items-baseline gap-3">
+            <span class="font-mono text-[12px] text-accent">03</span>
+            <span class="text-[16px] font-medium">Бюджет</span>
+          </legend>
+          <div class="flex flex-wrap gap-2.5">
+            <!-- ЗАМЕНИТЕ вилки на свои -->
+            <button type="button" class="chip inline-flex items-center gap-2 rounded-full border border-line bg-surface px-5 py-3 text-[14px]" data-value="до 150 000 ₽" aria-pressed="false"><span class="dot h-1.5 w-1.5 rounded-full bg-line"></span>до 150 000 ₽</button>
+            <button type="button" class="chip inline-flex items-center gap-2 rounded-full border border-line bg-surface px-5 py-3 text-[14px]" data-value="150–400 000 ₽" aria-pressed="false"><span class="dot h-1.5 w-1.5 rounded-full bg-line"></span>150–400 000 ₽</button>
+            <button type="button" class="chip inline-flex items-center gap-2 rounded-full border border-line bg-surface px-5 py-3 text-[14px]" data-value="400 000 ₽ и выше" aria-pressed="false"><span class="dot h-1.5 w-1.5 rounded-full bg-line"></span>400 000 ₽ и выше</button>
+            <button type="button" class="chip inline-flex items-center gap-2 rounded-full border border-line bg-surface px-5 py-3 text-[14px]" data-value="Нужна оценка" aria-pressed="false"><span class="dot h-1.5 w-1.5 rounded-full bg-line"></span>Нужна оценка</button>
+          </div>
+        </fieldset>
+
+        <fieldset data-group="deadline">
+          <legend class="mb-4 flex items-baseline gap-3">
+            <span class="font-mono text-[12px] text-accent">04</span>
+            <span class="text-[16px] font-medium">Когда нужен результат?</span>
+          </legend>
+          <div class="flex flex-wrap gap-2.5">
+            <button type="button" class="chip inline-flex items-center gap-2 rounded-full border border-line bg-surface px-5 py-3 text-[14px]" data-value="Вчера" aria-pressed="false"><span class="dot h-1.5 w-1.5 rounded-full bg-line"></span>Вчера</button>
+            <button type="button" class="chip inline-flex items-center gap-2 rounded-full border border-line bg-surface px-5 py-3 text-[14px]" data-value="1–2 месяца" aria-pressed="false"><span class="dot h-1.5 w-1.5 rounded-full bg-line"></span>1–2 месяца</button>
+            <button type="button" class="chip inline-flex items-center gap-2 rounded-full border border-line bg-surface px-5 py-3 text-[14px]" data-value="3 месяца и больше" aria-pressed="false"><span class="dot h-1.5 w-1.5 rounded-full bg-line"></span>3 месяца и больше</button>
+            <button type="button" class="chip inline-flex items-center gap-2 rounded-full border border-line bg-surface px-5 py-3 text-[14px]" data-value="Сроки гибкие" aria-pressed="false"><span class="dot h-1.5 w-1.5 rounded-full bg-line"></span>Сроки гибкие</button>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend class="mb-4 flex items-baseline gap-3">
+            <span class="font-mono text-[12px] text-accent">05</span>
+            <span class="text-[16px] font-medium">Куда прислать КП</span>
+          </legend>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <label class="block">
+              <span class="sr-only">Имя</span>
+              <input id="fName" type="text" placeholder="Как к вам обращаться"
+                     class="w-full rounded-2xl border border-line bg-paper px-5 py-4 text-[15px] outline-none transition placeholder:text-muted focus:border-ink focus:bg-surface">
+            </label>
+            <label class="block">
+              <span class="sr-only">Телеграм или почта</span>
+              <input id="fContact" type="text" placeholder="@telegram или почта" required
+                     class="w-full rounded-2xl border border-line bg-paper px-5 py-4 text-[15px] outline-none transition placeholder:text-muted focus:border-ink focus:bg-surface">
+            </label>
+          </div>
+          <label class="mt-3 block">
+            <span class="sr-only">Комментарий</span>
+            <textarea id="fComment" rows="3" placeholder="Пара слов о проекте — необязательно"
+                      class="w-full resize-none rounded-2xl border border-line bg-paper px-5 py-4 text-[15px] outline-none transition placeholder:text-muted focus:border-ink focus:bg-surface"></textarea>
+          </label>
+        </fieldset>
+
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <button type="submit" class="rounded-full bg-accent px-8 py-4 text-[15px] font-medium text-white transition hover:bg-invert hover:text-invertfg">
+            Отправить бриф
+          </button>
+          <p id="formHint" class="text-[13px] leading-relaxed text-muted">
+            Отвечу в течение рабочего дня. Данные никуда не передаю.<br class="hidden sm:block">
+            Не любите формы — пишите в <a href="https://t.me/soboldev" target="_blank" rel="noopener" class="font-medium text-accent underline underline-offset-4">@soboldev</a>.
+          </p>
+        </div>
+      </form>
+
+      <!-- Состояние «бриф отправлен» -->
+      <div id="briefDone" class="hidden rounded-3xl border border-accent bg-accentSoft p-8 md:p-10">
+        <svg viewBox="0 0 24 24" class="mb-5 h-8 w-8 text-accent" fill="currentColor" aria-hidden="true"><path d="M12 1.5c.55 5.4 4.6 9.45 10 10-5.4.55-9.45 4.6-10 10-.55-5.4-4.6-9.45-10-10 5.4-.55 9.45-4.6 10-10z"/></svg>
+        <h3 class="mb-3 font-display text-[24px] tracking-[-.02em]" style="font-weight:600">Бриф отправлен</h3>
+        <p class="max-w-[46ch] text-[15px] leading-relaxed text-ink/70">Посмотрю задачу и вернусь с вопросами или сразу со сметой — в течение рабочего дня. Если срочно, пишите в Telegram <a href="https://t.me/soboldev" target="_blank" rel="noopener" class="font-medium text-accent underline underline-offset-4">@soboldev</a>.</p>
+        <button id="briefReset" type="button" class="mt-6 text-[14px] font-medium text-accent underline underline-offset-4">Отправить ещё один бриф</button>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section id="faq" class="py-20 md:py-28">
+  <div class="mx-auto max-w-[1180px] px-5">
+    <div class="grid gap-10 md:grid-cols-[.8fr_1.2fr] md:gap-16">
+
+      <div class="reveal">
+        <p class="mb-4 font-mono text-[11px] uppercase tracking-[.18em] text-muted">Частые вопросы</p>
+        <h2 class="font-display text-[32px] leading-[1.08] tracking-[-.03em] sm:text-[40px]" style="font-weight:700">Что обычно спрашивают</h2>
+      </div>
+
+      <div class="reveal divide-y divide-line border-y border-line">
+        <details class="group py-6">
+          <summary class="flex items-start justify-between gap-6 text-[17px] font-medium">
+            Почему нельзя назвать цену сразу?
+            <span class="faq-sign mt-1 shrink-0 text-accent transition-transform duration-300">+</span>
+          </summary>
+          <p class="mt-4 max-w-[60ch] text-[15px] leading-relaxed text-muted">Могу — по вилке в карточках выше. Точная цифра появляется после брифа: интернет-магазин на 12 экранов и на 40 отличаются в три раза. Оценка бесплатная.</p>
+        </details>
+
+        <details class="group py-6">
+          <summary class="flex items-start justify-between gap-6 text-[17px] font-medium">
+            Как устроена оплата?
+            <span class="faq-sign mt-1 shrink-0 text-accent transition-transform duration-300">+</span>
+          </summary>
+          <p class="mt-4 max-w-[60ch] text-[15px] leading-relaxed text-muted">Договор, предоплата 30%, затем платежи по этапам. Работаю с ИП и юрлицами, закрывающие документы предоставляю.</p>
+        </details>
+
+        <details class="group py-6">
+          <summary class="flex items-start justify-between gap-6 text-[17px] font-medium">
+            Кому принадлежит код?
+            <span class="faq-sign mt-1 shrink-0 text-accent transition-transform duration-300">+</span>
+          </summary>
+          <p class="mt-4 max-w-[60ch] text-[15px] leading-relaxed text-muted">Вам. Репозиторий заводим на вашем аккаунте с первого дня, доступы к серверам и сторам тоже ваши. Никаких «ключей у подрядчика».</p>
+        </details>
+
+        <details class="group py-6">
+          <summary class="flex items-start justify-between gap-6 text-[17px] font-medium">
+            Возьмётесь доделать чужой проект?
+            <span class="faq-sign mt-1 shrink-0 text-accent transition-transform duration-300">+</span>
+          </summary>
+          <p class="mt-4 max-w-[60ch] text-[15px] leading-relaxed text-muted">Да, если код можно поддерживать. Сначала делаю аудит за 2–3 дня и честно говорю, что дешевле: доработать или переписать.</p>
+        </details>
+
+        <details class="group py-6">
+          <summary class="flex items-start justify-between gap-6 text-[17px] font-medium">
+            Что происходит после релиза?
+            <span class="faq-sign mt-1 shrink-0 text-accent transition-transform duration-300">+</span>
+          </summary>
+          <p class="mt-4 max-w-[60ch] text-[15px] leading-relaxed text-muted">Месяц правлю баги бесплатно. Дальше — либо разовые задачи по часам, либо помесячная поддержка с приоритетом по ответу.</p>
+        </details>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ФИНАЛЬНЫЙ ПРИЗЫВ ============ -->
+<section class="px-5 pb-12">
+  <div class="reveal mx-auto max-w-[1180px] overflow-hidden rounded-[32px] bg-night px-8 py-16 text-center text-white md:px-16 md:py-24">
+    <svg viewBox="0 0 24 24" class="mx-auto mb-8 h-8 w-8 text-accent" fill="currentColor"><path d="M12 1.5c.55 5.4 4.6 9.45 10 10-5.4.55-9.45 4.6-10 10-.55-5.4-4.6-9.45-10-10 5.4-.55 9.45-4.6 10-10z"/></svg>
+    <h2 class="mx-auto max-w-[18ch] font-display text-[30px] leading-[1.08] tracking-[-.03em] sm:text-[46px]" style="font-weight:700">Расскажите, что нужно построить</h2>
+    <p class="mx-auto mt-6 max-w-[46ch] text-[16px] leading-relaxed text-white/60">Смета и план работ — бесплатно, в течение рабочего дня. Даже если в итоге решите не делать.</p>
+    <a href="#brief" class="mt-9 inline-flex rounded-full bg-white px-8 py-4 text-[15px] font-medium text-night transition hover:bg-accent hover:text-white">Собрать бриф</a>
+  </div>
+</section>
+
+<!-- ============ ПОДВАЛ ============ -->
+<footer class="border-t border-line py-12">
+  <div class="mx-auto flex max-w-[1180px] flex-col gap-8 px-5 md:flex-row md:items-center md:justify-between">
+    <div class="flex items-center gap-2.5">
+      <svg viewBox="0 0 24 24" class="h-5 w-5" fill="currentColor"><path d="M12 1.5c.55 5.4 4.6 9.45 10 10-5.4.55-9.45 4.6-10 10-.55-5.4-4.6-9.45-10-10 5.4-.55 9.45-4.6 10-10z"/></svg>
+      <span class="font-display text-[16px] tracking-[-.02em]" style="font-weight:700">SobolDev</span>
+    </div>
+
+    <!-- ЗАМЕНИТЕ контакты на свои -->
+    <div class="flex flex-wrap gap-x-8 gap-y-3 font-mono text-[13px]">
+      <a href="https://t.me/soboldev" target="_blank" rel="noopener" class="text-muted transition hover:text-ink">@soboldev</a>
+      <a href="mailto:hello@soboldev.ru" class="text-muted transition hover:text-ink">hello@soboldev.ru</a>
+      <a href="https://github.com/soboldev" target="_blank" rel="noopener" class="text-muted transition hover:text-ink">github</a>
+    </div>
+
+    <p class="font-mono text-[12px] text-muted">© 2026 SobolDev</p>
+  </div>
+</footer>
+
+<!-- ============ МОДАЛКА КЕЙСА ============ -->
+<div id="caseModal" class="modal fixed inset-0 z-50" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+  <div class="absolute inset-0 bg-night/70 backdrop-blur-sm" data-close></div>
+
+  <div class="absolute inset-0 overflow-y-auto p-4 md:p-8">
+    <div class="modal-panel mx-auto my-auto w-full max-w-[1060px] overflow-hidden rounded-[28px] bg-surface shadow-2xl">
+
+      <div class="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-line bg-surface/95 px-6 py-4 backdrop-blur md:px-10">
+        <span id="mTag" class="font-mono text-[11px] uppercase tracking-[.16em] text-accent">—</span>
+        <button data-close class="grid h-10 w-10 place-items-center rounded-full border border-line transition hover:bg-paper" aria-label="Закрыть">
+          <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+
+      <div class="px-6 py-8 md:px-10 md:py-12">
+        <h2 id="mTitle" class="font-display text-[30px] leading-[1.05] tracking-[-.03em] md:text-[46px]" style="font-weight:700">—</h2>
+        <p id="mShort" class="mt-4 max-w-[54ch] text-[17px] leading-relaxed text-muted">—</p>
+
+        <dl id="mMeta" class="mt-9 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-4"></dl>
+
+        <div id="mShots" class="mt-10 grid gap-4"></div>
+
+        <div class="mt-12 grid gap-10 md:grid-cols-2">
+          <div>
+            <h3 class="mb-4 font-mono text-[11px] uppercase tracking-[.16em] text-muted">Задача</h3>
+            <p id="mTask" class="text-[15px] leading-relaxed text-ink/80">—</p>
+            <h3 class="mb-4 mt-8 font-mono text-[11px] uppercase tracking-[.16em] text-muted">Стек</h3>
+            <ul id="mStack" class="flex flex-wrap gap-2"></ul>
+          </div>
+          <div>
+            <h3 class="mb-4 font-mono text-[11px] uppercase tracking-[.16em] text-muted">Что сделал</h3>
+            <ul id="mDid" class="space-y-3 text-[15px] leading-relaxed text-ink/80"></ul>
+          </div>
+        </div>
+
+        <div id="mResult" class="mt-12 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-3"></div>
+
+        <div class="mt-12 flex flex-col items-start gap-4 border-t border-line pt-8 sm:flex-row sm:items-center sm:justify-between">
+          <p class="text-[16px]">Нужен похожий проект?</p>
+          <a href="#brief" data-close class="rounded-full bg-invert px-7 py-3.5 text-[15px] font-medium text-invertfg transition hover:bg-accent hover:text-white">Обсудить задачу</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   1. ДАННЫЕ КЕЙСОВ
+   Скриншоты: положите файлы рядом с этим html в папку /shots
+   и укажите пути ниже. Если файла нет — покажется аккуратная заглушка.
+   ========================================================= */
+const CASES = [
+  {
+    id: 'zap',
+    title: 'ZAP',
+    tag: 'Мобильное приложение · React Native',
+    short: 'Соцсеть для знакомств с людьми, которые находятся рядом прямо сейчас.',
+    cover: 'shots/zap-cover.png',
+    device: 'phone',
+    meta: [['Платформы','iOS · Android'],['Срок','11 недель'],['Год','2025'],['Роль','Разработка и дизайн-система']],
+    task: 'Заказчик хотел заменить бесконечные ленты на живое знакомство: видишь, кто в радиусе 500 метров, отправляешь «зап» — и если человек отвечает, открывается чат. Нужны были карта людей, монетизация и запас прочности на 20 000 онлайн-пользователей.',
+    did: [
+      'Экран «рядом» с фильтром по полу и радиусу — от 100 м до 5 км',
+      '«Запы» с лимитом по тарифу и апгрейдом до Silver и Gold',
+      'Сторис и лента событий с загрузкой видео до 60 секунд',
+      'Чат на WebSocket с доставкой и статусами прочтения',
+      'Подписки через App Store и Google Play, восстановление покупок'
+    ],
+    stack: ['React Native','Expo','TypeScript','Node.js','PostgreSQL','WebSocket','RevenueCat'],
+    shots: ['shots/zap-1.png','shots/zap-2.png','shots/zap-3.png'],
+    result: [['4,7','рейтинг в App Store'],['18 000','установок за 3 месяца'],['1,4 с','холодный старт']]
+  },
+  {
+    id: 'ferma',
+    title: 'FermaBox',
+    tag: 'Telegram Mini App · Магазин',
+    short: 'Магазин фермерских продуктов с доставкой — целиком внутри Telegram, без сайта и приложения.',
+    cover: 'shots/ferma-cover.png',
+    device: 'phone',
+    meta: [['Платформа','Telegram'],['Срок','4 недели'],['Год','2025'],['Роль','Разработка под ключ']],
+    task: 'Фермерское хозяйство продавало через комментарии в канале и теряло заказы. Нужен был магазин, который открывается из бота за секунду и не требует установки, плюс админка для сборщиков заказов.',
+    did: [
+      'Каталог с корзиной и выбором даты доставки прямо в чате',
+      'Оплата через ЮKassa и Telegram Stars, чек приходит сообщением',
+      'Бот с автоматическими статусами: собран, в пути, доставлен',
+      'Админка на вебе: остатки, заказы, выгрузка в 1С',
+      'Нативная тема Telegram — светлая и тёмная без отдельной вёрстки'
+    ],
+    stack: ['React','Telegram Mini Apps SDK','Node.js','PostgreSQL','ЮKassa','Docker'],
+    shots: ['shots/ferma-1.png','shots/ferma-2.png','shots/ferma-3.png'],
+    result: [['+64%','заказов за 2 месяца'],['9 с','средний путь до оплаты'],['0','установок — всё в чате']]
+  },
+  {
+    id: 'miracle',
+    title: 'Miracle',
+    tag: 'Веб · Fullstack',
+    short: 'Лендинг и вейтлист для торговой платформы: собрать заявки до запуска продукта.',
+    cover: 'shots/miracle-cover.png',
+    device: 'browser',
+    meta: [['Тип','Лендинг + вейтлист'],['Срок','2 недели'],['Год','2026'],['Роль','Дизайн и разработка']],
+    task: 'Команда выходила на рынок и хотела набрать базу до релиза. Требовался быстрый одностраничник на двух языках с формой вейтлиста, счётчиком очереди и реферальными ссылками.',
+    did: [
+      'Дизайн и вёрстка одностраничника с анимацией при скролле',
+      'Форма вейтлиста с проверкой почты и защитой от ботов',
+      'Реферальные ссылки: место в очереди растёт за приглашения',
+      'Две локали и автоопределение языка по браузеру',
+      'Аналитика событий и A/B-тест двух вариантов заголовка'
+    ],
+    stack: ['Next.js','TypeScript','Tailwind CSS','Supabase','Vercel'],
+    shots: ['shots/miracle-1.png','shots/miracle-2.png','shots/miracle-3.png'],
+    result: [['98','PageSpeed на мобильных'],['4 200','заявок за первый месяц'],['1,1 с','до первого экрана']]
+  },
+  {
+    id: 'kanso',
+    title: 'Kanso',
+    tag: 'Мобильное приложение · Flutter',
+    short: 'Трекер привычек с офлайн-режимом и синхронизацией между устройствами.',
+    cover: 'shots/kanso-cover.png',
+    device: 'phone',
+    meta: [['Платформы','iOS · Android'],['Срок','7 недель'],['Год','2025'],['Роль','Разработка']],
+    task: 'У заказчика был готовый дизайн в Figma и жёсткое требование: приложение должно полностью работать без интернета, а данные — подтягиваться на второе устройство без конфликтов.',
+    did: [
+      'Локальная база и очередь синхронизации с разрешением конфликтов',
+      'Виджеты на главный экран iOS и Android',
+      'Напоминания по расписанию и статистика по неделям',
+      'Экспорт истории в CSV и импорт из других трекеров',
+      'Тёмная тема и поддержка динамического размера шрифта'
+    ],
+    stack: ['Flutter','Dart','Riverpod','Drift','Firebase','Fastlane'],
+    shots: ['shots/kanso-1.png','shots/kanso-2.png','shots/kanso-3.png'],
+    result: [['100%','функций работают офлайн'],['4,8','рейтинг в Google Play'],['7 недель','от макета до релиза']]
+  }
+];
+
+/* =========================================================
+   2. ЗАГЛУШКА ДЛЯ СКРИНШОТОВ
+   ========================================================= */
+function shotHTML(src, extraClass){
+  return `
+  <div class="shot ${extraClass || ''}">
+    <div class="shot-ph">
+      <svg viewBox="0 0 24 24" class="h-6 w-6 text-white/25" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17l5-4 4 3 3-2 4 3"/>
+      </svg>
+      <span class="font-mono text-[10px] text-white/35">${src}</span>
+    </div>
+    <img src="${src}" alt="" loading="lazy" onerror="this.remove()">
+  </div>`;
+}
+
+/* =========================================================
+   3. СЕТКА КЕЙСОВ
+   ========================================================= */
+const grid = document.getElementById('caseGrid');
+grid.innerHTML = CASES.map(c => `
+  <article class="reveal group cursor-pointer overflow-hidden rounded-3xl border border-white/10 bg-night2 transition duration-300 hover:-translate-y-1 hover:border-white/25" data-case="${c.id}" tabindex="0" role="button" aria-label="Открыть кейс ${c.title}">
+    <div class="relative overflow-hidden">
+      ${shotHTML(c.cover, 'aspect-[4/3] transition duration-500 group-hover:scale-[1.03]')}
+    </div>
+    <div class="flex items-start justify-between gap-5 p-6">
+      <div>
+        <p class="mb-2 font-mono text-[11px] uppercase tracking-[.14em] text-accent">${c.tag}</p>
+        <h3 class="font-display text-[22px] tracking-[-.02em]" style="font-weight:600">${c.title}</h3>
+        <p class="mt-2 max-w-[36ch] text-[14px] leading-relaxed text-white/50">${c.short}</p>
+      </div>
+      <span class="mt-1 grid h-10 w-10 shrink-0 place-items-center rounded-full border border-white/15 transition group-hover:border-accent group-hover:bg-accent">
+        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg>
+      </span>
+    </div>
+  </article>
+`).join('');
+
+/* =========================================================
+   4. МОДАЛКА
+   ========================================================= */
+const modal = document.getElementById('caseModal');
+let lastFocused = null;
+
+function openCase(id){
+  const c = CASES.find(x => x.id === id);
+  if(!c) return;
+  lastFocused = document.activeElement;
+
+  document.getElementById('mTag').textContent   = c.tag;
+  document.getElementById('mTitle').textContent = c.title;
+  document.getElementById('mShort').textContent = c.short;
+  document.getElementById('mTask').textContent  = c.task;
+
+  document.getElementById('mMeta').innerHTML = c.meta.map(([k,v]) => `
+    <div class="bg-surface p-5">
+      <dt class="mb-1.5 font-mono text-[11px] uppercase tracking-[.14em] text-muted">${k}</dt>
+      <dd class="text-[15px] font-medium">${v}</dd>
+    </div>`).join('');
+
+  const cls = c.device === 'phone'
+    ? 'aspect-[9/19] rounded-[26px] border-[6px] border-night'
+    : 'aspect-[16/10] rounded-2xl border border-line';
+  document.getElementById('mShots').innerHTML =
+    `<div class="grid gap-4 ${c.device === 'phone' ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'}">
+       ${c.shots.map(s => shotHTML(s, cls)).join('')}
+     </div>`;
+
+  document.getElementById('mStack').innerHTML = c.stack.map(s =>
+    `<li class="rounded-full border border-line px-3.5 py-1.5 font-mono text-[12px]">${s}</li>`).join('');
+
+  document.getElementById('mDid').innerHTML = c.did.map(d =>
+    `<li class="flex gap-3"><span class="text-accent">✦</span><span>${d}</span></li>`).join('');
+
+  document.getElementById('mResult').innerHTML = c.result.map(([k,v]) => `
+    <div class="bg-surface p-6">
+      <p class="font-display text-[30px] tracking-[-.03em] text-accent" style="font-weight:700">${k}</p>
+      <p class="mt-1.5 text-[14px] text-muted">${v}</p>
+    </div>`).join('');
+
+  modal.classList.add('open');
+  document.body.classList.add('no-scroll');
+  modal.querySelector('[data-close]').focus();
+}
+
+function closeCase(){
+  modal.classList.remove('open');
+  document.body.classList.remove('no-scroll');
+  if(lastFocused) lastFocused.focus();
+}
+
+grid.addEventListener('click', e => {
+  const card = e.target.closest('[data-case]');
+  if(card) openCase(card.dataset.case);
+});
+grid.addEventListener('keydown', e => {
+  const card = e.target.closest('[data-case]');
+  if(card && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); openCase(card.dataset.case); }
+});
+modal.addEventListener('click', e => { if(e.target.closest('[data-close]')) closeCase(); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && modal.classList.contains('open')) closeCase(); });
+
+/* =========================================================
+   5. КОНСТРУКТОР БРИФА
+   ========================================================= */
+const state = { type:'', ready:'', budget:'', deadline:'', contact:'' };
+const leadId = 'B-' + String(new Date().getMonth()+1).padStart(2,'0') + String(new Date().getDate()).padStart(2,'0');
+
+document.querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    const group = chip.closest('[data-group]').dataset.group;
+    const already = chip.getAttribute('aria-pressed') === 'true';
+    chip.closest('[data-group]').querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed','false'));
+    if(!already){ chip.setAttribute('aria-pressed','true'); state[group] = chip.dataset.value; }
+    else { state[group] = ''; }
+  });
+});
+
+const contactInput = document.getElementById('fContact');
+contactInput.addEventListener('input', () => { state.contact = contactInput.value.trim(); });
+
+/* =========================================================
+   6. ОТПРАВКА ЗАЯВКИ
+   ========================================================= */
+document.getElementById('briefForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const hint = document.getElementById('formHint');
+
+  if(!state.type){
+    hint.textContent = 'Выберите, что нужно сделать — это первый вопрос.';
+    hint.className = 'text-[13px] leading-relaxed text-accent';
+    document.querySelector('[data-group="type"] .chip').focus();
+    return;
+  }
+  if(!state.contact){
+    hint.textContent = 'Оставьте телеграм или почту — иначе КП некуда прислать.';
+    hint.className = 'text-[13px] leading-relaxed text-accent';
+    contactInput.focus();
+    return;
+  }
+
+  const lead = {
+    id: leadId,
+    name: document.getElementById('fName').value.trim() || 'не указано',
+    contact: state.contact,
+    type: state.type,
+    ready: state.ready || 'не указано',
+    budget: state.budget || 'не указано',
+    deadline: state.deadline || 'не указано',
+    comment: document.getElementById('fComment').value.trim() || '—'
+  };
+
+  console.log('Заявка SobolDev:', lead);
+
+  /* --- ПОДКЛЮЧЕНИЕ ПРИЁМА ЗАЯВОК ---------------------------
+     Вариант А — Telegram-бот (токен лучше держать на своём бэкенде,
+     а не в этом файле, иначе его увидит любой посетитель):
+
+     await fetch('https://api.telegram.org/bot<ТОКЕН>/sendMessage', {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify({
+         chat_id: '<ВАШ_CHAT_ID>',
+         parse_mode: 'HTML',
+         text: `<b>Заявка ${lead.id}</b>\n` +
+               `Имя: ${lead.name}\nКонтакт: ${lead.contact}\n` +
+               `Тип: ${lead.type}\nГотовность: ${lead.ready}\n` +
+               `Бюджет: ${lead.budget}\nСрок: ${lead.deadline}\n` +
+               `Комментарий: ${lead.comment}`
+       })
+     });
+
+     Вариант Б — сервис форм без бэкенда:
+     await fetch('https://formspree.io/f/<ВАШ_ID>', {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify(lead)
+     });
+  ---------------------------------------------------------- */
+
+  e.target.classList.add('hidden');
+  const done = document.getElementById('briefDone');
+  done.classList.remove('hidden');
+  done.scrollIntoView({ block:'center', behavior:'smooth' });
+});
+
+document.getElementById('briefReset').addEventListener('click', () => {
+  const form = document.getElementById('briefForm');
+  const hint = document.getElementById('formHint');
+  form.reset();
+  form.classList.remove('hidden');
+  document.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed','false'));
+  Object.keys(state).forEach(k => state[k] = '');
+  hint.className = 'text-[13px] leading-relaxed text-muted';
+  document.getElementById('briefDone').classList.add('hidden');
+  form.scrollIntoView({ block:'start', behavior:'smooth' });
+});
+
+/* =========================================================
+   7. МЕНЮ И ПОЯВЛЕНИЕ БЛОКОВ
+   ========================================================= */
+const themeBtn = document.getElementById('themeBtn');
+function syncTheme(){
+  const dark = document.documentElement.classList.contains('dark');
+  themeBtn.setAttribute('aria-checked', String(dark));
+  themeBtn.setAttribute('aria-label', dark ? 'Светлая тема' : 'Тёмная тема');
+}
+syncTheme();
+themeBtn.addEventListener('click', () => {
+  const dark = document.documentElement.classList.toggle('dark');
+  try{ localStorage.setItem('sd-theme', dark ? 'dark' : 'light'); }catch(e){}
+  syncTheme();
+});
+
+const navBtn = document.getElementById('navBtn');
+const navMenu = document.getElementById('navMenu');
+navBtn.addEventListener('click', () => {
+  const open = navMenu.classList.toggle('hidden');
+  navBtn.setAttribute('aria-expanded', String(!open));
+});
+navMenu.addEventListener('click', e => {
+  if(e.target.tagName === 'A'){ navMenu.classList.add('hidden'); navBtn.setAttribute('aria-expanded','false'); }
+});
+
+const io = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting){ entry.target.classList.add('in'); io.unobserve(entry.target); }
+  });
+}, { threshold: .12, rootMargin: '0px 0px -60px' });
+document.querySelectorAll('.reveal').forEach((el, i) => {
+  el.style.transitionDelay = Math.min(i % 4, 3) * 70 + 'ms';
+  io.observe(el);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+/* Dark theme reacts to a class on <html>, not to the OS setting: the visitor picks it. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------- design tokens ---------- */
+@theme {
+	--font-display: 'Unbounded', system-ui, sans-serif;
+	--font-sans: 'Inter', system-ui, sans-serif;
+	--font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+	/* Theme-dependent colors resolve through CSS variables redefined under .dark. */
+	--color-paper: rgb(var(--c-bg));
+	--color-surface: rgb(var(--c-surface));
+	--color-ink: rgb(var(--c-ink));
+	--color-muted: rgb(var(--c-muted));
+	--color-line: rgb(var(--c-line));
+	--color-accent-soft: rgb(var(--c-accent-soft));
+	--color-invert: rgb(var(--c-invert));
+	--color-invert-fg: rgb(var(--c-invert-fg));
+
+	/* Always dark, in both themes: device mockups, case section, hero cards. */
+	--color-night: #0d0d12;
+	--color-night2: #15151e;
+	--color-accent: #4a3aff;
+	--color-danger: #d92d20;
+	--color-success: #12805c;
+	--color-warning: #b54708;
+
+	--radius-field: 1rem;
+	--radius-card: 1.5rem;
+	--radius-pill: 999px;
+
+	--shadow-lift: 0 24px 60px -30px rgb(13 13 18 / 0.4);
+	--shadow-nav: 0 8px 30px -12px rgb(13 13 18 / 0.18);
+
+	--container-page: 1180px;
+
+	--duration-fast: 160ms;
+	--duration-base: 300ms;
+	--duration-slow: 700ms;
+}
+
+:root {
+	--c-bg: 241 242 245;
+	--c-surface: 255 255 255;
+	--c-ink: 13 13 18;
+	--c-muted: 108 108 122;
+	--c-line: 228 229 234;
+	--c-accent-soft: 233 231 255;
+	--c-invert: 13 13 18;
+	--c-invert-fg: 255 255 255;
+	color-scheme: light;
+}
+
+.dark {
+	--c-bg: 10 10 14;
+	--c-surface: 22 22 30;
+	--c-ink: 240 240 246;
+	--c-muted: 150 150 166;
+	--c-line: 40 40 52;
+	--c-accent-soft: 37 32 84;
+	--c-invert: 255 255 255;
+	--c-invert-fg: 13 13 18;
+	color-scheme: dark;
+}
+
+@layer base {
+	html {
+		scroll-behavior: smooth;
+		scroll-padding-top: 110px;
+	}
+
+	body {
+		background-color: var(--color-paper);
+		color: var(--color-ink);
+		font-family: var(--font-sans);
+		-webkit-font-smoothing: antialiased;
+	}
+
+	:focus-visible {
+		outline: 2px solid var(--color-accent);
+		outline-offset: 3px;
+		border-radius: 6px;
+	}
+}
+
+@layer utilities {
+	.container-page {
+		margin-inline: auto;
+		max-width: var(--container-page);
+		padding-inline: 1.25rem;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+}
