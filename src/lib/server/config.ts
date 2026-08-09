@@ -1,5 +1,8 @@
 import * as v from 'valibot';
-import * as env from '$env/static/private';
+import * as privateEnv from '$env/static/private';
+// PUBLIC_SITE_URL carries the `PUBLIC_` prefix, so SvelteKit routes it to the public module.
+// It is a site address, not a secret; every other value stays private.
+import * as publicEnv from '$env/static/public';
 
 const booleanFlag = v.pipe(
 	v.optional(v.picklist(['true', 'false']), 'false'),
@@ -32,7 +35,7 @@ const configSchema = v.pipe(
 export type AppConfig = v.InferOutput<typeof configSchema>;
 
 function load(): AppConfig {
-	const result = v.safeParse(configSchema, env);
+	const result = v.safeParse(configSchema, { ...privateEnv, ...publicEnv });
 	if (!result.success) {
 		const details = result.issues
 			.map((issue) => `${v.getDotPath(issue) ?? '<root>'}: ${issue.message}`)
