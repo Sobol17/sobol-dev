@@ -123,6 +123,15 @@ export class ProjectService {
 		return this.projects.remove(id);
 	}
 
+	/** The cover is one image out of the gallery. Passing null takes the cover off. */
+	setCover(id: string, mediaId: string | null): void {
+		const updated = this.projects.update(id, {
+			coverMediaId: mediaId,
+			updatedAt: this.clock.now()
+		});
+		if (!updated) throw new ProjectError('not_found', `project ${id} does not exist`);
+	}
+
 	/** Drag and drop sends the whole order. Positions are rewritten in one transaction. */
 	reorder(ids: readonly string[]): void {
 		const now = this.clock.now();
