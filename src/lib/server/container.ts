@@ -11,9 +11,11 @@ import { FsStorage } from './clients/storage.fs';
 import type { Storage } from './clients/storage';
 import { LeadRepository } from './repositories/lead.repository';
 import { OutboxRepository } from './repositories/outbox.repository';
+import { ProjectRepository } from './repositories/project.repository';
 import { SessionRepository } from './repositories/session.repository';
 import { AuthService } from './domain/auth.service';
 import { LeadService } from './domain/lead.service';
+import { ProjectService } from './domain/project.service';
 import { RateLimitService } from './domain/rate-limit.service';
 import { RequestMetaFactory } from './domain/request-meta';
 import { systemClock, type Clock } from './domain/clock';
@@ -34,6 +36,7 @@ export interface Container {
 	runner: JobRunner;
 	scheduler: JobScheduler;
 	leads: LeadService;
+	projects: ProjectService;
 	auth: AuthService;
 	meta: RequestMetaFactory;
 	start(): void;
@@ -61,10 +64,12 @@ export function buildContainer(): Container {
 
 	const leadRepository = new LeadRepository(db.db);
 	const outboxRepository = new OutboxRepository(db.db);
+	const projectRepository = new ProjectRepository(db.db);
 	const sessionRepository = new SessionRepository(db.db);
 
 	const rateLimit = new RateLimitService(clock);
 	const leads = new LeadService(leadRepository, queue, uow, rateLimit, clock);
+	const projects = new ProjectService(projectRepository, uow, clock);
 	const auth = new AuthService(sessionRepository, rateLimit, clock);
 	const meta = new RequestMetaFactory(config.IP_HASH_SALT, clock);
 
@@ -99,6 +104,7 @@ export function buildContainer(): Container {
 		runner,
 		scheduler,
 		leads,
+		projects,
 		auth,
 		meta,
 
