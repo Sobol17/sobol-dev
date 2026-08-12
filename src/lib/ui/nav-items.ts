@@ -9,7 +9,8 @@ export interface NavItem {
  */
 export const ADMIN_NAV: NavItem[] = [
 	{ href: '/admin', label: 'Дашборд' },
-	{ href: '/admin/projects', label: 'Кейсы' }
+	{ href: '/admin/projects', label: 'Кейсы' },
+	{ href: '/admin/media', label: 'Медиа' }
 ];
 
 export const PUBLIC_NAV: NavItem[] = [{ href: '/lead', label: 'Бриф' }];

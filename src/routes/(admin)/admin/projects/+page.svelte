@@ -14,6 +14,7 @@
 	} from './projects.remote';
 
 	const toasts = getToastStore();
+	const list = $derived(adminProjects());
 
 	const columns = [
 		{ key: 'title', label: 'Кейс' },
@@ -74,9 +75,11 @@
 	<Button href="/admin/projects/new">Новый кейс</Button>
 </div>
 
-{#await adminProjects()}
+<!-- Await once for the server render, then read `current`: that is what a refresh updates. -->
+{#await list}
 	<Card><Skeleton lines={6} /></Card>
-{:then items}
+{:then}
+	{@const items = list.current ?? []}
 	<Table {columns} rows={items}>
 		{#snippet row(item: AdminProjectListItem)}
 			<tr
