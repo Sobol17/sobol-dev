@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { E2E_ADMIN_EMAIL, E2E_ADMIN_PASSWORD } from '../../scripts/e2e-credentials';
+import { loginAsAdmin } from '../helpers/e2e-admin';
 
 const GOAL = 'Нужен интернет-магазин на тридцать позиций с оплатой и выгрузкой в 1С';
 
@@ -28,10 +28,7 @@ test.describe('lead vertical', () => {
 		await page.goto('/admin');
 		await expect(page).toHaveURL(/\/login\?next=/);
 
-		await page.getByLabel('Почта').fill(E2E_ADMIN_EMAIL);
-		await page.getByLabel('Пароль').fill(E2E_ADMIN_PASSWORD);
-		await page.getByRole('button', { name: 'Войти' }).click();
-
+		await loginAsAdmin(page);
 		await expect(page).toHaveURL(/\/admin$/);
 		await expect(page.getByText(publicId!)).toBeVisible();
 		await expect(page.getByText('Игорь')).toBeVisible();
@@ -75,11 +72,7 @@ test.describe('lead vertical', () => {
 		// The honeypot is a schema violation, so the submission never becomes a lead.
 		await expect(page).toHaveURL(/\/lead$/);
 
-		await page.goto('/login');
-		await page.getByLabel('Почта').fill(E2E_ADMIN_EMAIL);
-		await page.getByLabel('Пароль').fill(E2E_ADMIN_PASSWORD);
-		await page.getByRole('button', { name: 'Войти' }).click();
-
+		await loginAsAdmin(page);
 		await expect(page.getByText('Бот')).toHaveCount(0);
 	});
 });

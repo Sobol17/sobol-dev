@@ -1,4 +1,11 @@
-import type { BudgetRange, LeadStatus, LeadType, TimelineRange } from '$lib/types';
+import type {
+	BudgetRange,
+	LeadStatus,
+	LeadType,
+	ProjectCategory,
+	PublishStatus,
+	TimelineRange
+} from '$lib/types';
 
 export function excerpt(text: string, length = 200): string {
 	const clean = text.replace(/\s+/g, ' ').trim();
@@ -32,6 +39,18 @@ export const TIMELINE_LABELS: Record<TimelineRange, string> = {
 	'1_3m': '1–3 месяца',
 	over_3m: '3 месяца и больше',
 	unknown: 'сроки гибкие'
+};
+
+export const PROJECT_CATEGORY_LABELS: Record<ProjectCategory, string> = {
+	web: 'Веб',
+	mobile: 'Мобильное приложение',
+	tma: 'Telegram Mini App'
+};
+
+export const PUBLISH_STATUS_LABELS: Record<PublishStatus, string> = {
+	draft: 'Черновик',
+	published: 'Опубликован',
+	archived: 'В архиве'
 };
 
 export const LEAD_STATUS_LABELS: Record<LeadStatus, string> = {

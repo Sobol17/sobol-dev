@@ -1,17 +1,5 @@
 import * as v from 'valibot';
-
-/**
- * Without JS an untouched input still posts an empty string. Map it to `undefined`
- * so an omitted optional field never reads as a malformed value.
- */
-function blankable<TOutput>(schema: v.GenericSchema<string, TOutput>) {
-	return v.pipe(
-		v.optional(v.string(), ''),
-		v.trim(),
-		v.transform((value): string | undefined => (value === '' ? undefined : value)),
-		v.union([v.undefined_(), schema])
-	);
-}
+import { blankable } from './common';
 
 export const leadInputSchema = v.pipe(
 	v.object({
