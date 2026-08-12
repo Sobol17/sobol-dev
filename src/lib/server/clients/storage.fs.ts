@@ -20,7 +20,7 @@ export class FsStorage implements Storage {
 		return { key, sizeBytes: data.byteLength };
 	}
 
-	async get(key: string): Promise<Uint8Array> {
+	async get(key: string): Promise<Uint8Array<ArrayBuffer>> {
 		return new Uint8Array(await readFile(this.pathFor(key)));
 	}
 

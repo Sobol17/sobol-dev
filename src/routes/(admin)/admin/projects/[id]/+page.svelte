@@ -12,6 +12,7 @@
 		updateProject
 	} from '../projects.remote';
 	import ProjectFields from '../_components/project-fields.svelte';
+	import ProjectGallery from '../_components/project-gallery.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -76,3 +77,7 @@
 		<Button href="/admin/projects" variant="ghost">К списку</Button>
 	</div>
 </form>
+
+<div class="mt-8 max-w-[820px]">
+	<ProjectGallery projectId={data.id} />
+</div>
