@@ -29,8 +29,10 @@
 	"dependencies": {
 		"@node-rs/argon2": "2.0.2",
 		"better-sqlite3": "13.0.3",
+		"blurhash": "^2.0.5",
 		"drizzle-orm": "0.45.2",
 		"pino": "10.3.1",
+		"sharp": "^0.35.3",
 		"valibot": "1.4.2"
 	},
 	"devDependencies": {
@@ -58,10 +60,10 @@
 		"svelte-check": "^4.6.0",
 		"tailwind-merge": "^3.4.0",
 		"tailwindcss": "^4.3.3",
+		"tsx": "^4.23.11",
 		"typescript": "^6.0.3",
 		"typescript-eslint": "^8.60.1",
 		"vite": "^8.0.16",
-		"vitest": "^4.1.10",
-		"tsx": "^4.23.11"
+		"vitest": "^4.1.10"
 	}
 }

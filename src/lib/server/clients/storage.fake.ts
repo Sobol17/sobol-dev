@@ -2,17 +2,17 @@ import { StorageError, type Storage, type StoredObject } from './storage';
 
 /** In-memory double with the same failure switch as the other fakes. */
 export class FakeStorage implements Storage {
-	readonly objects = new Map<string, Uint8Array>();
+	readonly objects = new Map<string, Uint8Array<ArrayBuffer>>();
 	failNext = 0;
 	failAlways = false;
 
 	async put(key: string, data: Uint8Array, _mime: string): Promise<StoredObject> {
 		this.guard();
-		this.objects.set(key, data);
+		this.objects.set(key, new Uint8Array(data));
 		return { key, sizeBytes: data.byteLength };
 	}
 
-	async get(key: string): Promise<Uint8Array> {
+	async get(key: string): Promise<Uint8Array<ArrayBuffer>> {
 		this.guard();
 		const data = this.objects.get(key);
 		if (!data) throw new StorageError(`object not found: ${key}`);
