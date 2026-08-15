@@ -13,4 +13,7 @@ export const ADMIN_NAV: NavItem[] = [
 	{ href: '/admin/media', label: 'Медиа' }
 ];
 
-export const PUBLIC_NAV: NavItem[] = [{ href: '/lead', label: 'Бриф' }];
+export const PUBLIC_NAV: NavItem[] = [
+	{ href: '/cases', label: 'Кейсы' },
+	{ href: '/lead', label: 'Бриф' }
+];

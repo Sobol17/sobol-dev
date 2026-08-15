@@ -1,8 +1,9 @@
 import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
 import type { Db } from '../db/index';
-import { projectTags, projects, techTags } from '../db/schema';
-import type { ProjectCategory, PublishStatus } from '$lib/types';
+import { media, projectMedia, projectTags, projects, techTags } from '../db/schema';
+import type { MediaRef, ProjectCard, ProjectCategory, PublishStatus } from '$lib/types';
 import { slugify } from '$lib/utils/slug';
+import { toMediaRef, type MediaRow } from './media.repository';
 
 export type ProjectRow = typeof projects.$inferSelect;
 export type NewProjectRow = typeof projects.$inferInsert;
@@ -43,6 +44,60 @@ export class ProjectRepository {
 			tags: tags.get(row.id) ?? [],
 			updatedAt: row.updatedAt.toISOString()
 		}));
+	}
+
+	/**
+	 * Public reads live here, not in a component: the `published` filter is part of the query
+	 * and cannot be forgotten by whoever renders the list.
+	 */
+	listPublished(): ProjectCard[] {
+		const rows = this.db
+			.select({ project: projects, cover: media })
+			.from(projects)
+			.leftJoin(media, eq(media.id, projects.coverMediaId))
+			.where(eq(projects.status, 'published'))
+			.orderBy(asc(projects.position), desc(projects.publishedAt))
+			.all();
+
+		const tags = this.tagNamesByProject(rows.map((row) => row.project.id));
+		return rows.map((row) => toCard(row.project, row.cover, tags.get(row.project.id) ?? []));
+	}
+
+	/** Cases picked for the landing. Position keeps the owner in charge of the order. */
+	listFeatured(limit: number): ProjectCard[] {
+		const rows = this.db
+			.select({ project: projects, cover: media })
+			.from(projects)
+			.leftJoin(media, eq(media.id, projects.coverMediaId))
+			.where(and(eq(projects.status, 'published'), eq(projects.featured, true)))
+			.orderBy(asc(projects.position), desc(projects.publishedAt))
+			.limit(limit)
+			.all();
+
+		const tags = this.tagNamesByProject(rows.map((row) => row.project.id));
+		return rows.map((row) => toCard(row.project, row.cover, tags.get(row.project.id) ?? []));
+	}
+
+	findPublishedBySlug(slug: string): { project: ProjectRow; cover: MediaRef | null } | undefined {
+		const row = this.db
+			.select({ project: projects, cover: media })
+			.from(projects)
+			.leftJoin(media, eq(media.id, projects.coverMediaId))
+			.where(and(eq(projects.slug, slug), eq(projects.status, 'published')))
+			.get();
+		if (!row) return undefined;
+
+		return { project: row.project, cover: toPublicCover(row.cover) };
+	}
+
+	/** Sitemap input: published pages only, with the date crawlers use to schedule a revisit. */
+	listPublishedForSitemap(): { slug: string; updatedAt: Date }[] {
+		return this.db
+			.select({ slug: projects.slug, updatedAt: projects.updatedAt })
+			.from(projects)
+			.where(eq(projects.status, 'published'))
+			.orderBy(asc(projects.position))
+			.all();
 	}
 
 	findById(id: string): ProjectRow | undefined {
@@ -133,6 +188,18 @@ export class ProjectRepository {
 		return this.tagNamesByProject([projectId]).get(projectId) ?? [];
 	}
 
+	/** Gallery of a public case: processed images only, in the order the owner set. */
+	publicGallery(projectId: string): PublicGalleryImage[] {
+		return this.db
+			.select({ media, caption: projectMedia.caption })
+			.from(projectMedia)
+			.innerJoin(media, eq(media.id, projectMedia.mediaId))
+			.where(and(eq(projectMedia.projectId, projectId), eq(media.status, 'ready')))
+			.orderBy(asc(projectMedia.position))
+			.all()
+			.map((row) => ({ ...toMediaRef(row.media), caption: row.caption }));
+	}
+
 	tagNamesByProject(projectIds: readonly string[]): Map<string, string[]> {
 		const grouped = new Map<string, string[]>();
 		if (projectIds.length === 0) return grouped;
@@ -152,4 +219,27 @@ export class ProjectRepository {
 		}
 		return grouped;
 	}
+}
+
+/** One image of a public case gallery. The caption belongs to the link, not to the file. */
+export interface PublicGalleryImage extends MediaRef {
+	caption: string | null;
+}
+
+function toCard(row: ProjectRow, cover: MediaRow | null, tags: string[]): ProjectCard {
+	return {
+		id: row.id,
+		slug: row.slug,
+		title: row.title,
+		category: row.category,
+		summary: row.summary,
+		cover: toPublicCover(cover),
+		tags,
+		featured: row.featured
+	};
+}
+
+/** A cover that has not been processed yet has no variants to render, so it counts as absent. */
+function toPublicCover(cover: MediaRow | null): MediaRef | null {
+	return cover && cover.status === 'ready' ? toMediaRef(cover) : null;
 }
