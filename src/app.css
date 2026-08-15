@@ -20,6 +20,8 @@
 	--color-night: #0d0d12;
 	--color-night2: #15151e;
 	--color-accent: #4a3aff;
+	/* The accent drops to 3:1 on night surfaces. This one clears AA for labels there. */
+	--color-accent-bright: #8f83ff;
 	--color-danger: #d92d20;
 	--color-success: #12805c;
 	--color-warning: #b54708;
@@ -46,6 +48,8 @@
 	html {
 		scroll-behavior: smooth;
 		scroll-padding-top: 110px;
+		/* Lets `block-size: auto` animate, which is what makes the FAQ answers slide open. */
+		interpolate-size: allow-keywords;
 	}
 
 	body {
@@ -110,6 +114,21 @@
 
 	.float-slow {
 		animation: float-slow 16s ease-in-out infinite;
+	}
+
+	/* Height animation for a native `details`. Browsers without `::details-content` drop the whole
+	   rule and the answer still opens, just without the slide. */
+	.details-reveal::details-content {
+		block-size: 0;
+		overflow: hidden;
+		transition:
+			block-size var(--duration-base) ease,
+			content-visibility var(--duration-base);
+		transition-behavior: allow-discrete;
+	}
+
+	.details-reveal[open]::details-content {
+		block-size: auto;
 	}
 }
 

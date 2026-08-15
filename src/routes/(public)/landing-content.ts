@@ -87,17 +87,13 @@ export const PROCESS: ProcessStep[] = [
 	}
 ];
 
-export interface StackGroup {
-	group: string;
-	items: string[];
-}
-
-export const STACK: StackGroup[] = [
-	{ group: 'Фронтенд', items: ['TypeScript', 'SvelteKit', 'React', 'Tailwind CSS'] },
-	{ group: 'Мобильные', items: ['Flutter', 'React Native', 'Telegram Mini Apps'] },
-	{ group: 'Бэкенд', items: ['Node.js', 'PostgreSQL', 'SQLite', 'Redis'] },
-	{ group: 'Инфраструктура', items: ['Docker', 'Caddy', 'GitHub Actions', 'VPS'] }
-];
+export const FAQ_INTRO = {
+	eyebrow: 'Вопросы',
+	title: 'Что спрашивают чаще всего',
+	text: 'Здесь то, что всплывает в первом разговоре. Остального в списке нет — спрашивайте напрямую.',
+	contactLabel: 'Написать в Telegram →',
+	contactHref: 'https://t.me/soboldev'
+} as const;
 
 export interface FaqItem {
 	question: string;

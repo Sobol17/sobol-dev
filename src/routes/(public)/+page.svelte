@@ -2,11 +2,11 @@
 	import ProjectCard from '$lib/components/project-card.svelte';
 	import Section from '$lib/components/section.svelte';
 	import SeoHead from '$lib/components/seo-head.svelte';
-	import { Badge, Button, Card, RadioCards, cn } from '$lib/ui';
+	import { Button, Card, RadioCards, cn } from '$lib/ui';
 	import { LEAD_TYPE_LABELS } from '$lib/utils/format';
 	import type { LeadType, ProjectCategory } from '$lib/types';
 	import type { PageProps } from './$types';
-	import { DIRECTIONS, FAQ, FINAL_CTA, HERO, PROCESS, STACK } from './landing-content';
+	import { DIRECTIONS, FAQ, FAQ_INTRO, FINAL_CTA, HERO, PROCESS } from './landing-content';
 
 	let { data }: PageProps = $props();
 
@@ -200,31 +200,17 @@
 	</ol>
 </Section>
 
-<Section id="stack" eyebrow="Стек" title="На чём собираю">
-	<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-		{#each STACK as group (group.group)}
-			<Card padding="md" class="grid content-start gap-4">
-				<p class="font-mono text-[11px] tracking-[.14em] text-muted uppercase">{group.group}</p>
-				<ul class="flex flex-wrap gap-2">
-					{#each group.items as item (item)}
-						<li><Badge tone="neutral">{item}</Badge></li>
-					{/each}
-				</ul>
-			</Card>
-		{/each}
-	</div>
-</Section>
-
 {#if data.featured.length > 0}
 	<Section
 		id="cases"
-		eyebrow="Кейсы"
+		tone="dark"
+		eyebrow="Работы"
 		title="Что уже работает"
 		lead="Задача, решение и результат по каждому проекту."
 	>
-		<ul class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+		<ul class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
 			{#each data.featured as project (project.id)}
-				<li><ProjectCard {project} /></li>
+				<li><ProjectCard {project} tone="dark" /></li>
 			{/each}
 		</ul>
 
@@ -234,17 +220,47 @@
 	</Section>
 {/if}
 
-<Section id="faq" eyebrow="Вопросы" title="Что спрашивают чаще всего" class="bg-surface">
-	<div class="grid max-w-[820px] gap-3">
-		{#each FAQ as item (item.question)}
-			<details class="group rounded-card border border-line bg-paper px-6 py-5">
-				<summary class="flex cursor-pointer items-center justify-between gap-4 text-[16px]">
-					{item.question}
-					<span class="font-mono text-muted transition group-open:rotate-45">+</span>
-				</summary>
-				<p class="mt-4 max-w-[60ch] text-[15px] leading-relaxed text-muted">{item.answer}</p>
-			</details>
-		{/each}
+<Section id="faq" class="bg-surface">
+	<div class="grid gap-10 md:grid-cols-[.8fr_1.2fr] md:gap-16">
+		<div class="md:sticky md:top-28 md:self-start">
+			<p class="mb-4 font-mono text-[11px] tracking-[.18em] text-muted uppercase">
+				{FAQ_INTRO.eyebrow}
+			</p>
+			<h2
+				class="font-display text-[32px] leading-[1.08] tracking-[-.03em] sm:text-[40px]"
+				style="font-weight:700"
+			>
+				{FAQ_INTRO.title}
+			</h2>
+			<p class="mt-5 max-w-[34ch] text-[15px] leading-relaxed text-muted">{FAQ_INTRO.text}</p>
+			<a
+				href={FAQ_INTRO.contactHref}
+				target="_blank"
+				rel="noopener"
+				class="mt-6 inline-block font-mono text-[13px] text-accent transition hover:text-ink"
+			>
+				{FAQ_INTRO.contactLabel}
+			</a>
+		</div>
+
+		<div class="border-t border-line">
+			{#each FAQ as item (item.question)}
+				<!-- One shared `name` keeps a single answer open: the list stays readable at any length. -->
+				<details name="faq" class="details-reveal group border-b border-line">
+					<summary
+						class="flex cursor-pointer list-none items-start justify-between gap-6 py-5 text-[16px] leading-snug font-medium transition group-open:text-accent hover:text-accent [&::-webkit-details-marker]:hidden"
+					>
+						{item.question}
+						<span
+							class="mt-[3px] shrink-0 font-mono text-[15px] text-accent transition-transform duration-300 group-open:rotate-45"
+						>
+							+
+						</span>
+					</summary>
+					<p class="max-w-[62ch] pb-6 text-[15px] leading-relaxed text-muted">{item.answer}</p>
+				</details>
+			{/each}
+		</div>
 	</div>
 </Section>
 
