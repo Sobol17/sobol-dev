@@ -151,23 +151,27 @@
 >
 	<div class="grid gap-6 md:grid-cols-3">
 		{#each DIRECTIONS as direction (direction.id)}
-			<Card padding="lg" class="grid content-start gap-5">
-				<Badge tone="accent">{direction.meta}</Badge>
-				<h3 class="font-display text-[22px] tracking-[-.02em]" style="font-weight:600">
+			<Card padding="md" class="flex flex-col gap-4">
+				<p class="font-mono text-[11px] tracking-[.16em] text-muted uppercase">{direction.meta}</p>
+				<h3
+					class="font-display text-[19px] leading-[1.25] tracking-[-.02em] text-balance"
+					style="font-weight:600"
+				>
 					{direction.title}
 				</h3>
-				<p class="text-[15px] leading-relaxed text-muted">{direction.description}</p>
-				<ul class="grid gap-2 text-[14px]">
+				<p class="text-[14px] leading-relaxed text-muted">{direction.description}</p>
+				<ul class="grid gap-1.5 text-[14px]">
 					{#each direction.bullets as bullet (bullet)}
 						<li class="flex gap-2.5">
-							<span class="mt-2 inline-block size-1.5 shrink-0 rounded-pill bg-accent"></span>
+							<span class="mt-[9px] inline-block size-1 shrink-0 rounded-pill bg-accent"></span>
 							<span>{bullet}</span>
 						</li>
 					{/each}
 				</ul>
+				<!-- `mt-auto` pins the link to the card floor, so all three line up whatever the copy runs to. -->
 				<a
 					href="/lead?type={direction.id}"
-					class="font-mono text-[13px] text-accent underline underline-offset-4"
+					class="mt-auto border-t border-line pt-4 font-mono text-[12px] text-accent transition hover:text-ink"
 				>
 					Обсудить задачу →
 				</a>
