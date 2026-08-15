@@ -1,13 +1,60 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import SeoHead from '$lib/components/seo-head.svelte';
 	import { Button, Field, Input, RadioCards, Select, Stepper, Textarea } from '$lib/ui';
 	import { LEAD_STEPS, LeadFormState } from '$lib/state/lead-form.svelte';
+	import { getToastStore } from '$lib/state/toast.svelte';
 	import { BUDGET_LABELS, LEAD_TYPE_LABELS, TIMELINE_LABELS } from '$lib/utils/format';
 	import type { BudgetRange, LeadType, TimelineRange } from '$lib/types';
+	import type { PageProps } from './$types';
 	import { submitLead } from './lead.remote';
 
-	const form = new LeadFormState();
+	const FIELD_NAMES = [
+		'type',
+		'goal',
+		'budget',
+		'timeline',
+		'contactName',
+		'contactEmail',
+		'contactTelegram'
+	] as const;
+
+	let { data }: PageProps = $props();
+
+	const toasts = getToastStore();
+
+	/**
+	 * Seeded twice over: from the type the landing passed in the query, then from whatever the
+	 * server echoed back after a rejected submission. Without JS that is what refills the form.
+	 */
+	const form = new LeadFormState({
+		// Untracked on purpose: seeding runs once, after that the visitor owns the field.
+		type: submitLead.fields.type.value() ?? untrack(() => data.initialType),
+		goal: submitLead.fields.goal.value(),
+		budget: submitLead.fields.budget.value(),
+		timeline: submitLead.fields.timeline.value(),
+		contactName: submitLead.fields.contactName.value(),
+		contactEmail: submitLead.fields.contactEmail.value(),
+		contactTelegram: submitLead.fields.contactTelegram.value()
+	});
+
+	/**
+	 * Enhanced submit keeps the visitor on the step that failed instead of leaving them on the
+	 * contact step staring at a form that looks fine.
+	 */
+	const formAttributes = submitLead.enhance(async ({ submit }) => {
+		try {
+			await submit();
+		} catch {
+			toasts.error('Не получилось отправить бриф. Проверьте связь и попробуйте ещё раз.');
+			return;
+		}
+
+		const rejected = FIELD_NAMES.filter((field) => submitLead.fields[field].issues());
+		if (form.showFirstInvalid(rejected)) {
+			toasts.error('Проверьте отмеченные поля');
+		}
+	});
 
 	/**
 	 * Steps collapse only once the client took over. Server-rendered markup shows every
@@ -56,7 +103,7 @@
 			<Stepper step={form.step} steps={LEAD_STEPS} class="mt-10" />
 		{/if}
 
-		<form {...submitLead} class="mt-10 grid gap-9">
+		<form {...formAttributes} class="mt-10 grid gap-9">
 			<fieldset class:hidden={enhanced && form.step !== 0}>
 				<legend class="mb-4 flex items-baseline gap-3">
 					<span class="font-mono text-[12px] text-accent">01</span>

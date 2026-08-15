@@ -1,9 +1,12 @@
 import * as v from 'valibot';
 import { blankable } from './common';
 
+/** Also parses the `type` query parameter the landing puts on its call to action. */
+export const leadTypeSchema = v.picklist(['web', 'mobile', 'tma', 'other']);
+
 export const leadInputSchema = v.pipe(
 	v.object({
-		type: v.picklist(['web', 'mobile', 'tma', 'other']),
+		type: leadTypeSchema,
 		goal: v.pipe(v.string(), v.trim(), v.minLength(20), v.maxLength(2000)),
 		budget: v.picklist(['under_3k', '3k_10k', '10k_30k', 'over_30k', 'unknown']),
 		timeline: v.picklist(['asap', 'under_1m', '1_3m', 'over_3m', 'unknown']),
