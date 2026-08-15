@@ -1,10 +1,13 @@
 import type { ProjectInput } from '$lib/schemas/project';
+import type { MediaRef, ProjectCard, ProjectCategory, ProjectMetric } from '$lib/types';
+import { renderMarkdown } from '$lib/utils/markdown';
 import { slugify, uniqueSlug } from '$lib/utils/slug';
 import type { UnitOfWork } from '../db/unit-of-work';
 import type {
 	AdminProjectListItem,
 	ProjectRepository,
-	ProjectRow
+	ProjectRow,
+	PublicGalleryImage
 } from '../repositories/project.repository';
 import type { Clock } from './clock';
 
@@ -25,6 +28,36 @@ export interface ProjectDetails {
 	tags: string[];
 }
 
+/** Everything a public case page draws. `bodyHtml` is already sanitized markdown. */
+export interface PublicCase {
+	id: string;
+	slug: string;
+	title: string;
+	category: ProjectCategory;
+	summary: string;
+	bodyHtml: string;
+	clientName: string | null;
+	roleText: string | null;
+	year: number | null;
+	durationWeeks: number | null;
+	liveUrl: string | null;
+	repoUrl: string | null;
+	metrics: ProjectMetric[];
+	tags: string[];
+	cover: MediaRef | null;
+	gallery: PublicGalleryImage[];
+	publishedAt: string | null;
+	updatedAt: string;
+}
+
+export interface SitemapEntry {
+	path: string;
+	updatedAt: string;
+}
+
+/** How many cases the landing shows. More than three stops reading as a selection. */
+export const FEATURED_LIMIT = 3;
+
 export class ProjectService {
 	constructor(
 		private readonly projects: ProjectRepository,
@@ -34,6 +67,50 @@ export class ProjectService {
 
 	list(): AdminProjectListItem[] {
 		return this.projects.listAdmin();
+	}
+
+	/** Public list. Drafts and archived cases never leave the repository, so they cannot leak. */
+	publicList(): ProjectCard[] {
+		return this.projects.listPublished();
+	}
+
+	featured(limit = FEATURED_LIMIT): ProjectCard[] {
+		return this.projects.listFeatured(limit);
+	}
+
+	publicCase(slug: string): PublicCase | undefined {
+		const found = this.projects.findPublishedBySlug(slug);
+		if (!found) return undefined;
+
+		const { project, cover } = found;
+		return {
+			id: project.id,
+			slug: project.slug,
+			title: project.title,
+			category: project.category,
+			summary: project.summary,
+			// Rendered here so the markup the browser receives went through the sanitizer once.
+			bodyHtml: renderMarkdown(project.body),
+			clientName: project.clientName,
+			roleText: project.roleText,
+			year: project.year,
+			durationWeeks: project.durationWeeks,
+			liveUrl: project.liveUrl,
+			repoUrl: project.repoUrl,
+			metrics: project.metrics,
+			tags: this.projects.tagNamesFor(project.id),
+			cover,
+			gallery: this.projects.publicGallery(project.id),
+			publishedAt: project.publishedAt?.toISOString() ?? null,
+			updatedAt: project.updatedAt.toISOString()
+		};
+	}
+
+	sitemapEntries(): SitemapEntry[] {
+		return this.projects.listPublishedForSitemap().map((entry) => ({
+			path: `/cases/${entry.slug}`,
+			updatedAt: entry.updatedAt.toISOString()
+		}));
 	}
 
 	get(id: string): ProjectDetails | undefined {
