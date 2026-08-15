@@ -104,7 +104,7 @@
 		<!-- Markdown was sanitized in the service: the renderer escapes input and emits its own tags. -->
 		<svelte:boundary>
 			<div
-				class="prose mt-12 max-w-none prose-neutral dark:prose-invert prose-headings:font-display prose-headings:tracking-[-.02em] prose-a:text-accent"
+				class="prose mt-12 max-w-none prose-neutral prose-headings:font-display prose-headings:tracking-[-.02em] prose-a:text-accent"
 			>
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 				{@html project.bodyHtml}

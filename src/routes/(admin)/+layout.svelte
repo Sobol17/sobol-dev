@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import Logo from '$lib/components/logo.svelte';
-	import ThemeToggle from '$lib/components/theme-toggle.svelte';
 	import { ADMIN_NAV, cn } from '$lib/ui';
 	import type { LayoutData } from './$types';
 
@@ -40,7 +39,6 @@
 			</nav>
 
 			<div class="flex items-center gap-3">
-				<ThemeToggle />
 				<span class="text-[14px] text-muted">{data.user.displayName}</span>
 				<form method="POST" action="/logout">
 					<button type="submit" class="text-[14px] text-muted transition hover:text-ink">

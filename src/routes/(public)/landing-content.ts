@@ -6,7 +6,7 @@ import type { ProjectCategory } from '$lib/types';
  */
 
 export const HERO = {
-	eyebrow: 'Студия разработки · беру 2 проекта в месяц',
+	eyebrow: 'Студия разработки',
 	titleStart: 'Сайты, приложения и',
 	titleAccent: 'Telegram Mini Apps',
 	lead: 'SobolDev — небольшая студия. Веду проект от брифа до релиза: интерфейс, код, публикация в сторах и поддержка. Заявку разбираю в день обращения и присылаю смету с фиксированной ценой.',

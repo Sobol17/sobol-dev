@@ -1,6 +1,5 @@
 <script lang="ts">
 	import Logo from '$lib/components/logo.svelte';
-	import ThemeToggle from '$lib/components/theme-toggle.svelte';
 	import { Button, PUBLIC_NAV } from '$lib/ui';
 
 	let { children } = $props();
@@ -27,7 +26,6 @@
 			</ul>
 
 			<div class="flex items-center gap-2">
-				<ThemeToggle />
 				<Button href="/lead" size="md" class="hidden sm:inline-flex">Получить КП</Button>
 				<button
 					type="button"
