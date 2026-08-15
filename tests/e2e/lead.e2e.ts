@@ -58,6 +58,48 @@ test.describe('lead vertical', () => {
 		await context.close();
 	});
 
+	test('the type picked on the landing arrives preselected, without javascript', async ({
+		browser
+	}) => {
+		const context = await browser.newContext({
+			javaScriptEnabled: false,
+			baseURL: 'http://localhost:4173',
+			reducedMotion: 'reduce'
+		});
+		const page = await context.newPage();
+
+		await page.goto('/lead?type=tma');
+		await expect(page.getByRole('radio', { name: 'Telegram Mini App' })).toBeChecked();
+
+		await context.close();
+	});
+
+	test('a rejected submission comes back with the answers still in the form', async ({
+		browser
+	}) => {
+		const context = await browser.newContext({
+			javaScriptEnabled: false,
+			baseURL: 'http://localhost:4173',
+			reducedMotion: 'reduce'
+		});
+		const page = await context.newPage();
+
+		await page.goto('/lead');
+		await page.getByRole('radio', { name: 'Сайт' }).check();
+		await page.getByLabel('Что нужно получить в итоге?').fill('Слишком коротко');
+		await page.getByLabel('Как к вам обращаться').fill('Игорь');
+		await page.getByLabel('Telegram', { exact: true }).fill('@client');
+		await page.getByRole('button', { name: 'Отправить бриф' }).click();
+
+		// The goal is too short, so the server refuses. Nothing the visitor typed is lost.
+		expect(new URL(page.url()).pathname).toBe('/lead');
+		await expect(page.getByLabel('Как к вам обращаться')).toHaveValue('Игорь');
+		await expect(page.getByLabel('Что нужно получить в итоге?')).toHaveValue('Слишком коротко');
+		await expect(page.getByRole('radio', { name: 'Сайт' })).toBeChecked();
+
+		await context.close();
+	});
+
 	test('a bot that fills the honeypot gets nothing', async ({ page }) => {
 		await page.goto('/lead');
 		await page.getByRole('radio', { name: 'Сайт' }).check();
