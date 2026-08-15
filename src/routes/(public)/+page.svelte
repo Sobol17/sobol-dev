@@ -2,13 +2,44 @@
 	import ProjectCard from '$lib/components/project-card.svelte';
 	import Section from '$lib/components/section.svelte';
 	import SeoHead from '$lib/components/seo-head.svelte';
-	import { Badge, Button, Card, RadioCards } from '$lib/ui';
+	import { Badge, Button, Card, RadioCards, cn } from '$lib/ui';
 	import { LEAD_TYPE_LABELS } from '$lib/utils/format';
-	import type { LeadType } from '$lib/types';
+	import type { LeadType, ProjectCategory } from '$lib/types';
 	import type { PageProps } from './$types';
 	import { DIRECTIONS, FAQ, FINAL_CTA, HERO, PROCESS, STACK } from './landing-content';
 
 	let { data }: PageProps = $props();
+
+	/**
+	 * Hero backdrop: one outlined canvas per direction, in the proportion that direction ships in.
+	 * The geometry lives here, the words stay in `landing-content.ts`.
+	 */
+	const HERO_FRAMES: Record<
+		ProjectCategory,
+		{ place: string; tilt: string; box: string; label: string; delay: string }
+	> = {
+		web: {
+			place: 'top-[46%] left-[max(1.5rem,calc(50%-668px))]',
+			tilt: '-rotate-3',
+			box: 'w-[236px] aspect-[16/10] rounded-[14px]',
+			label: 'text-left',
+			delay: '0s'
+		},
+		mobile: {
+			place: 'top-[40%] right-[max(1.5rem,calc(50%-650px))]',
+			tilt: 'rotate-6',
+			box: 'ml-auto w-[112px] aspect-[9/19] rounded-[22px]',
+			label: 'text-right',
+			delay: '-5s'
+		},
+		tma: {
+			place: 'bottom-[7%] left-[max(1.5rem,calc(50%-620px))]',
+			tilt: 'rotate-2',
+			box: 'w-[132px] aspect-[4/5] rounded-[18px]',
+			label: 'text-left',
+			delay: '-10s'
+		}
+	};
 
 	const leadTypes = (['web', 'mobile', 'tma', 'other'] as LeadType[]).map((value) => ({
 		value,
@@ -36,12 +67,40 @@
 />
 
 <section id="top" class="relative overflow-hidden pt-36 pb-16 md:pt-44 md:pb-24">
-	<div
-		class="pointer-events-none absolute -top-24 -left-32 size-[420px] rounded-full bg-accent-soft blur-[90px]"
-	></div>
-	<div
-		class="pointer-events-none absolute top-40 -right-24 size-[380px] rounded-full bg-accent-soft blur-[90px]"
-	></div>
+	<div class="hero-wash pointer-events-none absolute inset-0"></div>
+	<div class="hero-grid pointer-events-none absolute inset-0"></div>
+
+	{#each DIRECTIONS as direction (direction.id)}
+		{@const frame = HERO_FRAMES[direction.id]}
+		<div
+			class={cn('pointer-events-none absolute hidden select-none xl:block', frame.place)}
+			aria-hidden="true"
+		>
+			<div class="float-slow" style="animation-delay:{frame.delay}">
+				<div class={frame.tilt}>
+					<div
+						class={cn(
+							'grid content-start gap-2 border border-line bg-surface/60 p-3 shadow-lift backdrop-blur-[2px]',
+							frame.box
+						)}
+					>
+						<span class="h-1.5 w-1/2 rounded-pill bg-line"></span>
+						<span class="mt-1 h-8 rounded-[8px] bg-accent/10"></span>
+						<span class="h-1.5 w-full rounded-pill bg-line"></span>
+						<span class="h-1.5 w-2/3 rounded-pill bg-line"></span>
+					</div>
+					<p
+						class={cn(
+							'mt-3 font-mono text-[10px] tracking-[.16em] text-muted uppercase',
+							frame.label
+						)}
+					>
+						{direction.id} · {direction.meta}
+					</p>
+				</div>
+			</div>
+		</div>
+	{/each}
 
 	<div class="container-page relative">
 		<p
