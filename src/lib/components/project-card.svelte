@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { ProjectCard } from '$lib/types';
-	import { Badge, Card, cn } from '$lib/ui';
+	import { Card, cn } from '$lib/ui';
 	import { PROJECT_CATEGORY_LABELS } from '$lib/utils/format';
 	import MediaPicture from './media-picture.svelte';
 
@@ -30,9 +30,9 @@
 		dark: {
 			card: 'h-full border-white/10 bg-night2 hover:border-white/25',
 			cover: 'bg-night',
-			quiet: 'text-white/50',
+			quiet: 'text-white/65',
 			category: 'text-accent-bright',
-			summary: 'text-white/55',
+			summary: 'text-white/75',
 			arrow: 'border-white/15 group-hover:border-accent group-hover:bg-accent'
 		}
 	};
@@ -45,41 +45,33 @@
 	padding="sm"
 	class={cn('group grid gap-5 overflow-hidden', tokens.card)}
 >
-	<div class={cn('aspect-[16/10] overflow-hidden rounded-field', tokens.cover)}>
-		{#if project.cover}
+	{#if project.cover}
+		<div class={cn('aspect-[16/10] overflow-hidden rounded-field', tokens.cover)}>
 			<MediaPicture
 				image={project.cover}
 				width={800}
 				sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
 				{eager}
-				class="duration-slow transition group-hover:scale-[1.03]"
+				class="transition-transform duration-200 group-hover:scale-[1.02]"
 			/>
-		{:else}
-			<div class={cn('grid h-full place-items-center font-mono text-[12px]', tokens.quiet)}>
-				{PROJECT_CATEGORY_LABELS[project.category]}
-			</div>
-		{/if}
-	</div>
+		</div>
+	{/if}
 
-	<div class="flex items-start justify-between gap-4 px-1 pb-1">
+	<div
+		class={cn(
+			'flex items-start justify-between gap-4 px-1 pb-1',
+			!project.cover && 'min-h-52 pt-3'
+		)}
+	>
 		<div class="grid gap-2">
-			<p class={cn('font-mono text-[11px] tracking-[.14em] uppercase', tokens.category)}>
+			<p class={cn('text-[11px] font-semibold tracking-[.1em] uppercase', tokens.category)}>
 				{PROJECT_CATEGORY_LABELS[project.category]}
 			</p>
 
-			<h3 class="font-display text-[20px] tracking-[-.02em]" style="font-weight:600">
+			<h3 class="font-display text-[22px] leading-[1.2] font-semibold tracking-[-.03em]">
 				{project.title}
 			</h3>
 			<p class={cn('text-[14px] leading-relaxed', tokens.summary)}>{project.summary}</p>
-
-			{#if project.tags.length > 0}
-				<p class={cn('font-mono text-[12px]', tokens.quiet)}>{project.tags.join(' · ')}</p>
-			{/if}
-
-			<!-- The landing block holds nothing but featured cases, so the flag only informs the list. -->
-			{#if project.featured && tone === 'light'}
-				<span class="mt-1 justify-self-start"><Badge tone="neutral">избранное</Badge></span>
-			{/if}
 		</div>
 
 		<span

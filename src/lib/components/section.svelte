@@ -19,7 +19,7 @@
 
 	const TONES: Record<Tone, { section: string; quiet: string; lead: string }> = {
 		light: { section: '', quiet: 'text-muted', lead: 'text-muted' },
-		dark: { section: 'bg-night text-white', quiet: 'text-white/45', lead: 'text-white/55' }
+		dark: { section: 'bg-night text-white', quiet: 'text-white/65', lead: 'text-white/75' }
 	};
 
 	const tokens = $derived(TONES[tone]);

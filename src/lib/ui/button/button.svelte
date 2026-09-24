@@ -45,7 +45,7 @@
 
 	const classes = $derived(
 		cn(
-			'inline-flex items-center justify-center gap-2 rounded-pill font-medium transition',
+			'inline-flex items-center justify-center gap-2 rounded-pill font-medium transition-[background-color,color,border-color,transform] duration-150 active:scale-[.98]',
 			'disabled:pointer-events-none disabled:opacity-50',
 			VARIANTS[variant],
 			SIZES[size],
