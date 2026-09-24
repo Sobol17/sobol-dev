@@ -6,7 +6,7 @@ const GOAL = 'Нужен интернет-магазин на тридцать �
 test.describe('lead vertical', () => {
 	test('a visitor submits a brief and the owner sees it in the admin', async ({ page }) => {
 		await page.goto('/');
-		await page.getByRole('link', { name: 'Собрать бриф за 40 секунд' }).click();
+		await page.getByRole('link', { name: 'Обсудить проект' }).first().click();
 		await expect(page).toHaveURL(/\/lead$/);
 
 		await page.getByRole('radio', { name: 'Сайт' }).check();

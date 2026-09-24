@@ -2,9 +2,8 @@
 	import ProjectCard from '$lib/components/project-card.svelte';
 	import Section from '$lib/components/section.svelte';
 	import SeoHead from '$lib/components/seo-head.svelte';
-	import { Button, Card, RadioCards, cn } from '$lib/ui';
-	import { LEAD_TYPE_LABELS } from '$lib/utils/format';
-	import type { LeadType, ProjectCategory } from '$lib/types';
+	import { Button, cn } from '$lib/ui';
+	import type { ProjectCategory } from '$lib/types';
 	import type { PageProps } from './$types';
 	import { DIRECTIONS, FAQ, FAQ_INTRO, FINAL_CTA, HERO, PROCESS } from './landing-content';
 
@@ -41,14 +40,11 @@
 		}
 	};
 
-	const leadTypes = (['web', 'mobile', 'tma', 'other'] as LeadType[]).map((value) => ({
-		value,
-		label: LEAD_TYPE_LABELS[value]
-	}));
-
-	let picked = $state<LeadType | ''>('');
-	// Without JS the button still points at the form; the picked type only saves a click.
-	const briefHref = $derived(picked === '' ? '/lead' : `/lead?type=${picked}`);
+	const HERO_FRAME_LABELS: { id: ProjectCategory; meta: string }[] = [
+		{ id: 'web', meta: 'в браузере' },
+		{ id: 'mobile', meta: 'на устройстве' },
+		{ id: 'tma', meta: 'в Telegram' }
+	];
 
 	const jsonLd = {
 		'@context': 'https://schema.org',
@@ -61,8 +57,9 @@
 </script>
 
 <SeoHead
-	title="SobolDev — сайты, мобильные приложения и Telegram Mini Apps"
-	description="Студия разработки SobolDev: fullstack-веб, мобильные приложения на Flutter и React Native, Telegram Mini Apps. Смета и коммерческое предложение в течение дня."
+	title="SobolDev — веб-сервисы и Telegram Mini Apps для бизнеса"
+	description="Проектирование и разработка веб-сервисов и Telegram Mini Apps для малого и среднего бизнеса: продажи, запись, клиентский сервис и интеграции."
+	image="/og-home.png"
 	{jsonLd}
 />
 
@@ -70,7 +67,7 @@
 	<div class="hero-wash pointer-events-none absolute inset-0"></div>
 	<div class="hero-grid pointer-events-none absolute inset-0"></div>
 
-	{#each DIRECTIONS as direction (direction.id)}
+	{#each HERO_FRAME_LABELS as direction (direction.id)}
 		{@const frame = HERO_FRAMES[direction.id]}
 		<div
 			class={cn('pointer-events-none absolute hidden select-none xl:block', frame.place)}
@@ -111,7 +108,7 @@
 		</p>
 
 		<h1
-			class="mx-auto max-w-[15ch] text-center font-display text-[40px] leading-[1.02] tracking-[-.035em] sm:text-[58px] md:text-[76px]"
+			class="mx-auto max-w-[20ch] text-center font-sans text-[40px] leading-[1.02] tracking-[-.035em] sm:text-[58px] md:text-[76px]"
 			style="font-weight:700"
 		>
 			{HERO.titleStart} <span class="text-accent">{HERO.titleAccent}</span>
@@ -133,7 +130,7 @@
 		<dl class="mx-auto mt-16 grid max-w-[720px] gap-8 sm:grid-cols-3">
 			{#each HERO.facts as fact (fact.label)}
 				<div class="text-center">
-					<dt class="font-display text-[30px] tracking-[-.02em]" style="font-weight:700">
+					<dt class="font-sans text-[30px] tracking-[-.02em]" style="font-weight:700">
 						{fact.value}
 					</dt>
 					<dd class="mt-2 text-[14px] leading-relaxed text-muted">{fact.label}</dd>
@@ -143,142 +140,143 @@
 	</div>
 </section>
 
+{#if data.featured.length > 0}
+	<Section
+		id="cases"
+		tone="dark"
+		eyebrow="Выбор работ"
+		title="Проекты"
+		lead="Задача и решение — в каждом кейсе. Показываем то, что уже сделано."
+	>
+		<ul class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+			{#each data.featured as project (project.id)}
+				<li><ProjectCard {project} tone="dark" /></li>
+			{/each}
+		</ul>
+		<div class="mt-8">
+			<a
+				href="/cases"
+				class="inline-flex items-center gap-2 border-b border-accent-bright pb-1 text-[14px] font-medium text-accent-bright hover:text-white"
+			>
+				Все работы <span aria-hidden="true">↗</span>
+			</a>
+		</div>
+	</Section>
+{/if}
+
 <Section
 	id="services"
-	eyebrow="Направления"
-	title="Три вещи, которые я делаю хорошо"
-	lead="Всё остальное честно отдаю тем, кто делает это лучше меня."
+	eyebrow="Что делаем"
+	title="Два формата. Одна задача — польза для бизнеса."
+	lead="Выбираем формат под ваш сценарий и аудиторию, а не под моду."
+	class="border-t border-line bg-surface"
 >
-	<div class="grid gap-6 md:grid-cols-3">
+	<div class="grid border-t border-line md:grid-cols-2">
 		{#each DIRECTIONS as direction (direction.id)}
-			<Card padding="md" class="flex flex-col gap-4">
-				<p class="font-mono text-[11px] tracking-[.16em] text-muted uppercase">{direction.meta}</p>
+			<article
+				class="border-b border-line py-8 md:px-8 md:py-10 md:first:pl-0 md:last:border-l md:last:pl-10"
+			>
+				<p class="text-[12px] font-semibold tracking-[.08em] text-accent uppercase">
+					{direction.meta}
+				</p>
 				<h3
-					class="font-display text-[19px] leading-[1.25] tracking-[-.02em] text-balance"
-					style="font-weight:600"
+					class="mt-6 font-display text-[28px] leading-[1.15] font-semibold tracking-[-.035em] sm:text-[34px]"
 				>
 					{direction.title}
 				</h3>
-				<p class="text-[14px] leading-relaxed text-muted">{direction.description}</p>
-				<ul class="grid gap-1.5 text-[14px]">
+				<p class="mt-4 max-w-[46ch] text-[15px] leading-[1.6] text-muted">
+					{direction.description}
+				</p>
+				<ul class="mt-7 grid gap-2 text-[14px] text-ink">
 					{#each direction.bullets as bullet (bullet)}
-						<li class="flex gap-2.5">
-							<span class="mt-[9px] inline-block size-1 shrink-0 rounded-pill bg-accent"></span>
-							<span>{bullet}</span>
+						<li class="flex gap-3">
+							<span class="text-accent" aria-hidden="true">—</span>{bullet}
 						</li>
 					{/each}
 				</ul>
-				<!-- `mt-auto` pins the link to the card floor, so all three line up whatever the copy runs to. -->
 				<a
 					href="/lead?type={direction.id}"
-					class="mt-auto border-t border-line pt-4 font-mono text-[12px] text-accent transition hover:text-ink"
+					class="mt-9 inline-flex items-center gap-2 border-b border-accent pb-1 text-[14px] font-medium text-accent hover:text-ink"
 				>
-					Обсудить задачу →
+					Обсудить задачу <span aria-hidden="true">↗</span>
 				</a>
-			</Card>
+			</article>
 		{/each}
 	</div>
 </Section>
 
 <Section
 	id="process"
-	eyebrow="Процесс"
-	title="От брифа до релиза за четыре шага"
-	lead="Никаких скрытых этапов: вы видите работающую сборку каждую неделю."
-	class="bg-surface"
+	eyebrow="Как работаем"
+	title="От задачи до запуска"
+	lead="Каждый этап понятен заранее. По ходу работы показываем не отчёты, а сам продукт."
 >
-	<ol class="grid gap-6 md:grid-cols-4">
+	<ol class="grid gap-x-7 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
 		{#each PROCESS as step (step.number)}
-			<li class="grid gap-3 border-t border-line pt-6">
-				<span class="font-mono text-[12px] text-accent">{step.number}</span>
-				<h3 class="font-display text-[20px] tracking-[-.02em]" style="font-weight:600">
+			<li class="border-t border-line pt-5">
+				<span class="text-[12px] font-semibold text-accent">{step.number}</span>
+				<h3 class="mt-5 text-[19px] leading-[1.25] font-semibold tracking-[-.02em]">
 					{step.title}
 				</h3>
-				<p class="text-[14px] leading-relaxed text-muted">{step.text}</p>
+				<p class="mt-3 text-[14px] leading-[1.6] text-muted">{step.text}</p>
 			</li>
 		{/each}
 	</ol>
 </Section>
 
-{#if data.featured.length > 0}
-	<Section
-		id="cases"
-		tone="dark"
-		eyebrow="Работы"
-		title="Что уже работает"
-		lead="Задача, решение и результат по каждому проекту."
-	>
-		<ul class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-			{#each data.featured as project (project.id)}
-				<li><ProjectCard {project} tone="dark" /></li>
-			{/each}
-		</ul>
-
-		<div class="mt-10">
-			<Button href="/cases" variant="secondary" size="md">Все кейсы</Button>
-		</div>
-	</Section>
-{/if}
-
-<Section id="faq" class="bg-surface">
+<Section id="faq" class="border-t border-line bg-surface">
 	<div class="grid gap-10 md:grid-cols-[.8fr_1.2fr] md:gap-16">
 		<div class="md:sticky md:top-28 md:self-start">
-			<p class="mb-4 font-mono text-[11px] tracking-[.18em] text-muted uppercase">
+			<p class="mb-4 text-[12px] font-semibold tracking-[.08em] text-accent uppercase">
 				{FAQ_INTRO.eyebrow}
 			</p>
 			<h2
-				class="font-display text-[32px] leading-[1.08] tracking-[-.03em] sm:text-[40px]"
-				style="font-weight:700"
+				class="font-display text-[36px] leading-[1.1] font-semibold tracking-[-.035em] sm:text-[44px]"
 			>
 				{FAQ_INTRO.title}
 			</h2>
-			<p class="mt-5 max-w-[34ch] text-[15px] leading-relaxed text-muted">{FAQ_INTRO.text}</p>
+			<p class="mt-5 max-w-[36ch] text-[15px] leading-[1.6] text-muted">{FAQ_INTRO.text}</p>
 			<a
 				href={FAQ_INTRO.contactHref}
 				target="_blank"
 				rel="noopener"
-				class="mt-6 inline-block font-mono text-[13px] text-accent transition hover:text-ink"
+				class="mt-6 inline-block border-b border-accent pb-1 text-[14px] font-medium text-accent hover:text-ink"
+				>{FAQ_INTRO.contactLabel}</a
 			>
-				{FAQ_INTRO.contactLabel}
-			</a>
 		</div>
-
 		<div class="border-t border-line">
 			{#each FAQ as item (item.question)}
-				<!-- One shared `name` keeps a single answer open: the list stays readable at any length. -->
 				<details name="faq" class="details-reveal group border-b border-line">
 					<summary
-						class="flex cursor-pointer list-none items-start justify-between gap-6 py-5 text-[16px] leading-snug font-medium transition group-open:text-accent hover:text-accent [&::-webkit-details-marker]:hidden"
+						class="flex cursor-pointer list-none items-start justify-between gap-6 py-5 text-[16px] leading-[1.4] font-medium hover:text-accent [&::-webkit-details-marker]:hidden"
 					>
 						{item.question}
-						<span
-							class="mt-[3px] shrink-0 font-mono text-[15px] text-accent transition-transform duration-300 group-open:rotate-45"
+						<span class="shrink-0 text-[18px] text-accent group-open:rotate-45" aria-hidden="true"
+							>+</span
 						>
-							+
-						</span>
 					</summary>
-					<p class="max-w-[62ch] pb-6 text-[15px] leading-relaxed text-muted">{item.answer}</p>
+					<p class="max-w-[62ch] pb-6 text-[15px] leading-[1.6] text-muted">{item.answer}</p>
 				</details>
 			{/each}
 		</div>
 	</div>
 </Section>
 
-<Section id="brief">
-	<div class="rounded-card border border-accent bg-accent-soft p-8 md:p-12">
-		<h2
-			class="max-w-[16ch] font-display text-[30px] leading-[1.1] tracking-[-.03em] sm:text-[40px]"
-			style="font-weight:700"
-		>
-			{FINAL_CTA.title}
-		</h2>
-		<p class="mt-5 max-w-[52ch] text-[16px] leading-relaxed text-ink/70">{FINAL_CTA.text}</p>
-
-		<div class="mt-8 grid gap-6">
-			<RadioCards name="landing-type" options={leadTypes} bind:value={picked} columns={4} />
-			<div>
-				<Button href={briefHref} size="lg">{FINAL_CTA.button}</Button>
-			</div>
+<Section id="brief" class="border-t border-line">
+	<div class="grid gap-7 border-t-2 border-accent pt-8 md:grid-cols-[1fr_auto] md:items-end">
+		<div>
+			<p class="mb-5 text-[12px] font-semibold tracking-[.08em] text-accent uppercase">
+				Начнём с разговора
+			</p>
+			<h2
+				class="max-w-[20ch] font-display text-[36px] leading-[1.1] font-semibold tracking-[-.04em] sm:text-[48px]"
+			>
+				{FINAL_CTA.title}
+			</h2>
+			<p class="mt-5 max-w-[52ch] text-[16px] leading-[1.6] text-muted">{FINAL_CTA.text}</p>
 		</div>
+		<Button href="/lead" size="lg" class="w-full md:w-auto"
+			>{FINAL_CTA.button} <span aria-hidden="true">↗</span></Button
+		>
 	</div>
 </Section>

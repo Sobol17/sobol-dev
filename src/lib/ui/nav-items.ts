@@ -14,8 +14,8 @@ export const ADMIN_NAV: NavItem[] = [
 ];
 
 export const PUBLIC_NAV: NavItem[] = [
-	{ href: '/#services', label: 'Услуги' },
 	{ href: '/cases', label: 'Кейсы' },
+	{ href: '/#services', label: 'Услуги' },
 	{ href: '/#process', label: 'Процесс' },
 	{ href: '/#faq', label: 'Вопросы' }
 ];

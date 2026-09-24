@@ -141,14 +141,14 @@
 			</div>
 		{/if}
 
-		<div class="mt-16 rounded-card border border-accent bg-accent-soft p-8 md:p-10">
+		<div class="mt-16 rounded-card border border-line bg-accent-soft p-8 md:p-10">
 			<h2 class="font-display text-[26px] tracking-[-.02em]" style="font-weight:600">
 				Нужен похожий проект?
 			</h2>
 			<p class="mt-4 max-w-[46ch] text-[15px] leading-relaxed text-ink/70">
-				Соберите бриф за пару минут. Разберу задачу и пришлю смету с фиксированной ценой.
+				Расскажите о задаче. Обсудим подход, объём первого релиза и стоимость.
 			</p>
-			<Button href="/lead" size="lg" class="mt-8">Собрать бриф</Button>
+			<Button href="/lead" size="lg" class="mt-8">Обсудить проект</Button>
 		</div>
 	</div>
 </article>

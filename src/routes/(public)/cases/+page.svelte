@@ -46,21 +46,20 @@
 
 <SeoHead
 	title="Кейсы — SobolDev"
-	description="Проекты студии SobolDev: сайты и веб-приложения, мобильные приложения, Telegram Mini Apps. Задача, решение и результат по каждому кейсу."
+	description="Работы SobolDev: веб-сервисы, Telegram Mini Apps и мобильные приложения. Задачи и принятые решения в каждом проекте."
 />
 
 <section class="pt-36 pb-20 md:pt-44 md:pb-28">
 	<div class="container-page">
-		<p class="mb-4 font-mono text-[11px] tracking-[.18em] text-muted uppercase">Портфолио</p>
+		<p class="mb-4 text-[12px] font-semibold tracking-[.08em] text-accent uppercase">Работы</p>
 		<h1
 			class="max-w-[16ch] font-display text-[36px] leading-[1.05] tracking-[-.035em] sm:text-[52px]"
 			style="font-weight:700"
 		>
-			Кейсы и результаты
+			Проекты и решения
 		</h1>
 		<p class="mt-6 max-w-[52ch] text-[16px] leading-relaxed text-muted">
-			Каждый кейс отвечает на три вопроса: какая была задача, что сделал и чем это закончилось для
-			бизнеса.
+			В каждом проекте показываем задачу, подход и то, что было реализовано.
 		</p>
 
 		<div class="mt-10 flex flex-wrap items-center gap-4">
