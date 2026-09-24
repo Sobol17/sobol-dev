@@ -1,29 +1,27 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
 
-/* Dark theme reacts to a class on <html>, not to the OS setting: the visitor picks it. */
-@custom-variant dark (&:where(.dark, .dark *));
-
 /* ---------- design tokens ---------- */
 @theme {
 	--font-display: 'Unbounded', system-ui, sans-serif;
 	--font-sans: 'Inter', system-ui, sans-serif;
 	--font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-	/* Theme-dependent colors resolve through CSS variables redefined under .dark. */
-	--color-paper: rgb(var(--c-bg));
-	--color-surface: rgb(var(--c-surface));
-	--color-ink: rgb(var(--c-ink));
-	--color-muted: rgb(var(--c-muted));
-	--color-line: rgb(var(--c-line));
-	--color-accent-soft: rgb(var(--c-accent-soft));
-	--color-invert: rgb(var(--c-invert));
-	--color-invert-fg: rgb(var(--c-invert-fg));
+	--color-paper: #f1f2f5;
+	--color-surface: #ffffff;
+	--color-ink: #0d0d12;
+	--color-muted: #6c6c7a;
+	--color-line: #e4e5ea;
+	--color-accent-soft: #e9e7ff;
+	--color-invert: #0d0d12;
+	--color-invert-fg: #ffffff;
 
-	/* Always dark, in both themes: device mockups, case section, hero cards. */
+	/* Dark surfaces on a light page: device mockups, case section, hero cards. */
 	--color-night: #0d0d12;
 	--color-night2: #15151e;
 	--color-accent: #4a3aff;
+	/* The accent drops to 3:1 on night surfaces. This one clears AA for labels there. */
+	--color-accent-bright: #8f83ff;
 	--color-danger: #d92d20;
 	--color-success: #12805c;
 	--color-warning: #b54708;
@@ -43,33 +41,15 @@
 }
 
 :root {
-	--c-bg: 241 242 245;
-	--c-surface: 255 255 255;
-	--c-ink: 13 13 18;
-	--c-muted: 108 108 122;
-	--c-line: 228 229 234;
-	--c-accent-soft: 233 231 255;
-	--c-invert: 13 13 18;
-	--c-invert-fg: 255 255 255;
 	color-scheme: light;
-}
-
-.dark {
-	--c-bg: 10 10 14;
-	--c-surface: 22 22 30;
-	--c-ink: 240 240 246;
-	--c-muted: 150 150 166;
-	--c-line: 40 40 52;
-	--c-accent-soft: 37 32 84;
-	--c-invert: 255 255 255;
-	--c-invert-fg: 13 13 18;
-	color-scheme: dark;
 }
 
 @layer base {
 	html {
 		scroll-behavior: smooth;
 		scroll-padding-top: 110px;
+		/* Lets `block-size: auto` animate, which is what makes the FAQ answers slide open. */
+		interpolate-size: allow-keywords;
 	}
 
 	body {
@@ -91,6 +71,70 @@
 		margin-inline: auto;
 		max-width: var(--container-page);
 		padding-inline: 1.25rem;
+	}
+
+	/* Drafting grid behind the hero. The mask kills the lines before they reach the copy. */
+	.hero-grid {
+		background-image:
+			linear-gradient(
+				to right,
+				color-mix(in oklab, var(--color-ink) 7%, transparent) 1px,
+				transparent 1px
+			),
+			linear-gradient(
+				to bottom,
+				color-mix(in oklab, var(--color-ink) 7%, transparent) 1px,
+				transparent 1px
+			);
+		background-size: 72px 72px;
+		background-position: center -1px;
+		mask-image: radial-gradient(118% 82% at 50% 32%, #000 22%, transparent 74%);
+	}
+
+	/* Narrow screens fit few cells, so tighten the pitch to keep the texture readable. */
+	@media (width < 48rem) {
+		.hero-grid {
+			background-size: 44px 44px;
+		}
+	}
+
+	.hero-wash {
+		background-image:
+			radial-gradient(
+				46% 42% at 50% 34%,
+				color-mix(in oklab, var(--color-accent) 26%, transparent),
+				transparent 70%
+			),
+			radial-gradient(
+				38% 40% at 12% 78%,
+				color-mix(in oklab, var(--color-accent) 12%, transparent),
+				transparent 72%
+			);
+	}
+
+	.float-slow {
+		animation: float-slow 16s ease-in-out infinite;
+	}
+
+	/* Height animation for a native `details`. Browsers without `::details-content` drop the whole
+	   rule and the answer still opens, just without the slide. */
+	.details-reveal::details-content {
+		block-size: 0;
+		overflow: hidden;
+		transition:
+			block-size var(--duration-base) ease,
+			content-visibility var(--duration-base);
+		transition-behavior: allow-discrete;
+	}
+
+	.details-reveal[open]::details-content {
+		block-size: auto;
+	}
+}
+
+@keyframes float-slow {
+	50% {
+		transform: translateY(-16px);
 	}
 }
 

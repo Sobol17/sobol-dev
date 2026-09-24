@@ -18,7 +18,6 @@
 		Table,
 		Textarea
 	} from '$lib/ui';
-	import ThemeToggle from '$lib/components/theme-toggle.svelte';
 	import { getToastStore } from '$lib/state/toast.svelte';
 
 	const toasts = getToastStore();
@@ -55,7 +54,6 @@
 <div class="container-page grid gap-12 py-12">
 	<header class="flex items-center justify-between gap-4">
 		<h1 class="font-display text-[28px] tracking-[-.02em]" style="font-weight:700">Kitchen sink</h1>
-		<ThemeToggle />
 	</header>
 
 	<section class="grid gap-4">

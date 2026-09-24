@@ -1,16 +1,18 @@
-# sobol-portfolio
+# agency-site
 
-Лендинг с формой заявки плюс админка портфолио. SvelteKit, TypeScript, Drizzle ORM, SQLite,
-собственная очередь в таблице `jobs` того же файла БД.
+Сайт диджитал-агентства: продающий лендинг со встроенной формой заявки, страница «спасибо»,
+кастомная 404 и админка заявок. Бренд пока не выбран, рабочее имя проекта `agency-site`.
+SvelteKit, TypeScript, Drizzle ORM, SQLite, собственная очередь в таблице `jobs` того же файла БД.
 
-Единственный источник истины по архитектуре — [`tech.md`](./tech.md). Правила работы — [`CLAUDE.md`](./CLAUDE.md).
+Единственный источник истины по архитектуре — [`tech.md`](./tech.md). Правила работы — [`CLAUDE.md`](./CLAUDE.md),
+`AGENTS.md` ссылается на тот же файл.
 
 ## Запуск
 
 ```bash
 pnpm install
 cp .env.example .env          # заполнить SESSION_SECRET и IP_HASH_SALT (по 32+ символа)
-pnpm db:seed                  # демо-данные и админ
+pnpm db:seed                  # демо-заявки и админ
 pnpm dev
 ```
 
@@ -31,7 +33,7 @@ openssl rand -hex 32
 | `pnpm exec vitest run`        | юнит, контрактные и property-тесты                      |
 | `pnpm test:e2e`               | Playwright: собирает, готовит свою БД, поднимает сервер |
 | `pnpm db:generate`            | миграция из `schema.ts`, руками SQL не пишем            |
-| `pnpm db:seed`                | демо-кейсы, заявки, КП и админ                          |
+| `pnpm db:seed`                | демо-заявки и админ                                     |
 | `pnpm db:create-admin`        | создать или обновить админа                             |
 
 ## Что важно знать

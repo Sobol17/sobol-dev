@@ -1,13 +1,14 @@
-# tech.md — ядро проекта `sobol-portfolio`
+# tech.md — ядро проекта `agency-site`
 
-**Версия ядра: v3**
+**Версия ядра: v4**
 
 Changelog:
+- v4 — смена концепции: сайт диджитал-агентства вместо личного портфолио. Публичная часть сведена к трём страницам: лендинг со встроенной формой заявки, «спасибо» и кастомная 404. Страницы кейсов, CMS кейсов и медиатека удалены: кейсы стали статическим контентом лендинга. Коммерческие предложения выведены из объёма, админка v1 работает только с заявками. Из схемы удалены `media`, `projects`, `tech_tags`, `project_tags`, `project_media`, `proposals` и их енумы. Удалены топики `media.process`, `media.gc`, клиент `Storage`, примитив `FileDrop`, env `UPLOADS_DIR`. Добавлен `lib/site.ts` как единственное место для бренда и контактов. Проект переименован в `agency-site`, бренд выбирается позже. Дорожная карта: стадия 2 из слайсов A1–A5.
 - v3 — БД переведена с PostgreSQL на SQLite (`better-sqlite3` + Drizzle). Схема переписана под sqlite-core: текстовые id, целочисленные таймстампы, json в `text({ mode: 'json' })`, енумы через `text({ enum })`. pg-boss удалён, очередь живёт в таблице `jobs` того же файла БД, воркер крутится в процессе приложения. Деплой сведён к одному процессу, бэкап — к копии файла.
 - v2 — сокращён объём. Убраны LLM-черновик КП (`LlmClient`, топик `proposal.draft`) и почтовый канал (`Mailer`, SMTP). Уведомления только в Telegram. Топик `proposal.send` удалён: публикация КП стала синхронным переходом статуса, доставка клиенту ручная по публичной ссылке. `outbox_channel` сведён к одному значению.
 - v1 — исходное ядро: стек, схема БД, контракты очереди, общие типы, UI-примитивы, правила кода, дорожная карта на две стадии.
 
-Правило версии: файл меняется только append-only. Любая правка контракта (таблица, поле, payload джоба, общий тип, пропсы примитива) бампает версию и добавляет строку в changelog. Сессия нейросети этот файл не редактирует, редактирует только человек.
+Правило версии: файл меняется только append-only. Любая правка контракта (таблица, поле, payload джоба, общий тип, пропсы примитива) бампает версию и добавляет строку в changelog. Сессия нейросети этот файл по своей инициативе не редактирует, только по прямому поручению человека.
 
 ---
 
@@ -21,17 +22,30 @@ Changelog:
 
 ## 1. Проект
 
-**Что делает.** Продающий сайт-портфолио соло-разработчика. Публичный лендинг показывает услуги и кейсы, собирает заявки. Закрытая админка наполняет портфолио и ведёт заявки до отправленного коммерческого предложения.
+**Что делает.** Сайт диджитал-агентства. Публичная часть — одна продающая лендинг-страница: она объясняет, что делает агентство, показывает работы и собирает заявки через встроенную форму. Закрытая админка принимает заявки и ведёт их по статусам.
 
-**Для кого.** Заказчик, которому нужна разработка: веб-приложение, мобильное приложение (Flutter / React Native), Telegram Mini App.
+**Для кого.** Малый и средний бизнес, которому нужен цифровой продукт для продаж, записи и работы с клиентами. Основные направления — веб-приложения и Telegram Mini Apps, мобильная разработка вторична.
 
-**Цель.** Заявка с достаточной информацией, чтобы ответить коммерческим предложением без переписки-уточнения. Форма заявки короткая: тип проекта, три вопроса, контакт.
+**Цель.** Превратить посетителя в заявку с достаточной информацией, чтобы агентство ответило по существу без переписки-уточнения. Форма короткая: тип проекта, три вопроса, контакт.
 
-**Как это работает целиком.** Заявка падает в БД, владелец получает уведомление в Telegram. В админке владелец пишет КП руками по шаблону и публикует его. Публикация выдаёт ссылку с токеном, владелец отправляет её клиенту сам тем каналом, который клиент оставил. Автоматической рассылки клиенту в системе нет.
+**Бренд.** Не выбран. Рабочий slug проекта `agency-site`. Имя бренда, контакты и ссылки на соцсети живут в одной константе `lib/site.ts`, смена бренда — правка одного файла.
 
-**Метрика.** Доля посетителей кейс-страниц, дошедших до отправленной формы. Время от заявки до отправленного КП.
+**Страницы.**
 
-**Не входит в объём.** Оплата на сайте, личный кабинет клиента, блог, мультиязычность, регистрация пользователей. Админ ровно один, создаётся сидом.
+| Путь | Что это |
+|---|---|
+| `/` | лендинг: предложение, работы, услуги, процесс, FAQ, форма заявки секцией по якорю `#brief` |
+| `/thanks` | подтверждение успешной отправки: номер заявки и срок ответа |
+| любой несуществующий | кастомная 404 в стиле сайта с выходом на главную и к форме |
+| `/login`, `/admin/...` | вход и админка, закрыты от индексации |
+
+Больше публичных страниц нет. Новая страница — решение человека с бампом ядра.
+
+**Как это работает целиком.** Посетитель заполняет форму на лендинге и попадает на `/thanks`. Заявка падает в БД, владелец получает уведомление в Telegram со ссылкой на карточку в админке. В админке владелец меняет статус заявки и оставляет заметки. Ответ клиенту идёт вручную тем каналом, который клиент оставил. Автоматической рассылки клиенту в системе нет.
+
+**Метрика.** Доля посетителей лендинга, отправивших форму. Время от заявки до первого ответа клиенту.
+
+**Не входит в объём.** Отдельные страницы кейсов и CMS для них, коммерческие предложения в системе, блог, оплата на сайте, личный кабинет клиента, мультиязычность, регистрация пользователей. Админ ровно один, создаётся сидом. Команда в админке появится с расширением агентства и отдельным контрактом.
 
 ---
 
@@ -67,22 +81,23 @@ src/
   app.d.ts                    App.Locals, App.PageData
   hooks.server.ts             session, auth guard, security headers, request id
   lib/
+    site.ts                   бренд, контакты, соцсети, единственное место
     types/                    общие TS-типы, единственное место (раздел 7)
       index.ts
-      lead.ts  project.ts  proposal.ts  jobs.ts
+      lead.ts  jobs.ts
     schemas/                  valibot-схемы, общие для клиента и сервера
-      lead.ts  project.ts  proposal.ts  auth.ts
+      lead.ts  auth.ts  common.ts
     ui/                       примитивы (раздел 9), без бизнес-логики
-      button/  input/  field/  select/  radio-cards/  textarea/
+      button/  input/  field/  select/  radio-cards/  textarea/  checkbox/
       badge/  card/  dialog/  table/  toast/  tabs/  pagination/
-      file-drop/  stepper/  empty-state/  skeleton/
-      index.ts
+      stepper/  empty-state/  skeleton/
+      index.ts  nav-items.ts
     components/               общие композиты публичной части
-      seo-head.svelte  project-card.svelte  section.svelte
+      seo-head.svelte  section.svelte  logo.svelte
     state/                    клиентское состояние, классы с рунами
       toast.svelte.ts  lead-form.svelte.ts
     utils/                    чистые функции, без импортов сервера
-      slug.ts  format.ts  markdown.ts
+      format.ts  spam.ts  public-id.ts  seo.ts  errors.ts
     server/
       config.ts               единый конфиг, читает env один раз
       container.ts            композиционный корень, сборка сервисов
@@ -90,14 +105,11 @@ src/
         index.ts              подключение, PRAGMA, миграции на старте
         schema.ts  migrations/
       repositories/           доступ к данным, по одному классу на агрегат
-        lead.repository.ts  project.repository.ts  media.repository.ts
-        proposal.repository.ts  outbox.repository.ts  session.repository.ts
+        lead.repository.ts  outbox.repository.ts  session.repository.ts
       domain/                 бизнес-логика, классы, без знания HTTP
-        lead.service.ts  project.service.ts  media.service.ts
-        proposal.service.ts  auth.service.ts  rate-limit.service.ts
+        lead.service.ts  auth.service.ts  rate-limit.service.ts
       clients/                внешний мир за интерфейсами + фейки
         notifier.ts  notifier.telegram.ts  notifier.fake.ts
-        storage.ts  storage.fs.ts  storage.fake.ts
       queue/
         topics.ts             имена топиков, единственное место
         queue.ts              JobQueue: публикация и захват джобов
@@ -107,28 +119,27 @@ src/
       security/
         password.ts  session.ts  csp.ts  ip.ts
   routes/
+    +error.svelte                     кастомная 404 и нейтральная 500
     (public)/
       +layout.svelte
-      +page.svelte                    лендинг
-      cases/+page.svelte              список кейсов
-      cases/[slug]/+page.svelte       кейс
-      lead/+page.svelte               эталонный слайс: форма заявки
-      lead/lead.remote.ts
+      +page.svelte                    лендинг, форма заявки секцией #brief
+      landing-content.ts              тексты и кейсы лендинга, единственное место
+      _components/                    секции лендинга, карточка кейса
+      _lead/                          эталонная вертикаль: форма заявки без своего роута
+        lead.remote.ts  lead-form.svelte  constants.ts
       thanks/+page.svelte
-      p/[token]/+page.svelte          публичная страница КП
       sitemap.xml/+server.ts
       robots.txt/+server.ts
     (admin)/
       +layout.server.ts               гард авторизации
       +layout.svelte                  навигация админки (данными, не разметкой)
-      admin/+page.svelte              дашборд
-      admin/projects/...              слайс S1
-      admin/media/...                 слайс S2
-      admin/leads/...                 слайс S6
-      admin/proposals/...             слайс S7
+      admin/+page.server.ts           редирект на admin/leads
+      admin/leads/...                 слайс A4
     login/+page.svelte
+    healthz/+server.ts
     kitchen-sink/+page.svelte         витрина примитивов, только dev
 static/
+  cases/                      обложки кейсов, avif + webp в трёх ширинах
 tests/
   unit/  contract/  property/  e2e/
 scripts/
@@ -138,7 +149,8 @@ scripts/
 Правила расположения:
 - всё серверное лежит под `lib/server`, импорт оттуда в клиентский код запрещён физически (SvelteKit падает на сборке, не отключать);
 - слайс живёт целиком в своей папке: домен + репозиторий + роут + локальные компоненты;
-- локальный компонент фичи лежит рядом с роутом (`admin/leads/_components/`), в `lib/ui` попадает только то, что используют два и более слайса.
+- локальный компонент фичи лежит рядом с роутом (`admin/leads/_components/`), в `lib/ui` и `lib/components` попадает только то, что используют два и более слайса;
+- в `_lead/` нет `+page`, поэтому своего URL у формы нет, она живёт рядом с лендингом. Префикс `_` помечает такие папки явно, как у `_components/`.
 
 ---
 
@@ -152,7 +164,7 @@ routes (+page.server.ts, *.remote.ts)   транспорт: валидация �
 lib/server/domain (сервисы, классы)     бизнес-правила, не знают о HTTP и Request
         ↓
 lib/server/repositories (классы)        SQL через Drizzle, не знают о бизнес-правилах
-lib/server/clients (интерфейсы)         Telegram, файловое хранилище
+lib/server/clients (интерфейсы)         Telegram
 ```
 
 **ООП и внедрение зависимостей.** Сервис — класс с зависимостями в конструкторе, без глобальных импортов инфраструктуры:
@@ -173,11 +185,13 @@ export class LeadService {
 
 Сборка один раз в `lib/server/container.ts`, роуты берут готовый сервис оттуда. В тестах подставляются фейки через тот же конструктор, без моков модулей.
 
-**Интерфейс + фейк на каждый внешний сервис.** Внешних сервисов два: `Notifier` (Telegram) и `Storage` (файлы). Фейк пишется в один день с интерфейсом, живёт в репо, пишет вызовы в память и умеет возвращать ошибку по флагу. Разработка не ждёт токена бота и домена.
+**Интерфейс + фейк на каждый внешний сервис.** Внешний сервис один: `Notifier` (Telegram). Фейк живёт в репо, пишет вызовы в память и умеет возвращать ошибку по флагу. Разработка не ждёт токена бота и домена. Новый внешний сервис приходит вместе с фейком в одном PR.
 
 **Клиентское состояние.** Классы в `.svelte.ts` с полями `$state`, не разрозненные переменные и не сторы (раздел 11).
 
-**Чистая доменная логика отдельно.** Расчёт вилки цены, срока, скоринг заявки — чистые функции в `lib/utils` или методы без побочек. На них property-based тесты.
+**Чистая доменная логика отдельно.** Скоринг спама, генерация публичного номера заявки, парсинг UTM — чистые функции в `lib/utils` или методы без побочек. На них property-based тесты.
+
+**Контент лендинга.** Тексты, FAQ и кейсы лежат в `routes/(public)/landing-content.ts`, типы контента описаны там же: их видит только лендинг. Бренд и контакты берутся из `lib/site.ts`. В разметке секций литералов с текстом нет.
 
 ---
 
@@ -193,19 +207,15 @@ export class LeadService {
 - перечисление — `text({ enum: [...] })` с массивом-константой, он же источник TS-типа в `lib/types`. Дубля списка значений нет.
 
 ```ts
-import { sqliteTable, text, integer, index, uniqueIndex, primaryKey, check } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, index, uniqueIndex, check } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 
 // ---------- enums as const tuples (single source for schema and types) ----------
-export const PROJECT_CATEGORIES = ['web', 'mobile', 'tma'] as const;
-export const PUBLISH_STATUSES   = ['draft', 'published', 'archived'] as const;
-export const MEDIA_STATUSES     = ['pending', 'ready', 'failed'] as const;
 export const LEAD_TYPES         = ['web', 'mobile', 'tma', 'other'] as const;
 export const LEAD_STATUSES      = ['new', 'qualifying', 'proposal_sent', 'won', 'lost', 'spam'] as const;
 export const BUDGET_RANGES      = ['under_3k', '3k_10k', '10k_30k', 'over_30k', 'unknown'] as const;
 export const TIMELINE_RANGES    = ['asap', 'under_1m', '1_3m', 'over_3m', 'unknown'] as const;
-export const PROPOSAL_STATUSES  = ['draft', 'sent', 'viewed', 'accepted', 'declined', 'expired'] as const;
 export const OUTBOX_CHANNELS    = ['telegram'] as const;   // second channel is an append-only change
 export const OUTBOX_STATUSES    = ['pending', 'sent', 'failed'] as const;
 export const JOB_STATUSES       = ['pending', 'active', 'done', 'failed'] as const;
@@ -239,66 +249,6 @@ export const authAttempts = sqliteTable('auth_attempts', {
   succeeded: integer('succeeded', { mode: 'boolean' }).notNull(),
   createdAt: createdAt()
 }, (t) => ({ ipIdx: index('auth_attempts_ip_idx').on(t.ipHash, t.createdAt) }));
-
-// ---------- media ----------
-export const media = sqliteTable('media', {
-  id: id(),
-  storageKey: text('storage_key').notNull(),
-  mime: text('mime').notNull(),
-  width: integer('width'),
-  height: integer('height'),
-  sizeBytes: integer('size_bytes').notNull(),
-  alt: text('alt'),
-  blurhash: text('blurhash'),
-  variants: text('variants', { mode: 'json' }).$type<MediaVariant[]>().notNull().$defaultFn(() => []),
-  status: text('status', { enum: MEDIA_STATUSES }).notNull().default('pending'),
-  createdAt: createdAt()
-}, (t) => ({ keyUq: uniqueIndex('media_storage_key_uq').on(t.storageKey) }));
-
-// ---------- portfolio ----------
-export const projects = sqliteTable('projects', {
-  id: id(),
-  slug: text('slug').notNull(),
-  title: text('title').notNull(),
-  category: text('category', { enum: PROJECT_CATEGORIES }).notNull(),
-  summary: text('summary').notNull(),
-  body: text('body').notNull(),                    // markdown, sanitized on render
-  clientName: text('client_name'),
-  roleText: text('role_text'),
-  year: integer('year'),
-  durationWeeks: integer('duration_weeks'),
-  liveUrl: text('live_url'),
-  repoUrl: text('repo_url'),
-  coverMediaId: text('cover_media_id').references(() => media.id, { onDelete: 'set null' }),
-  metrics: text('metrics', { mode: 'json' }).$type<ProjectMetric[]>().notNull().$defaultFn(() => []),
-  status: text('status', { enum: PUBLISH_STATUSES }).notNull().default('draft'),
-  featured: integer('featured', { mode: 'boolean' }).notNull().default(false),
-  position: integer('position').notNull().default(0),
-  publishedAt: integer('published_at', { mode: 'timestamp_ms' }),
-  createdAt: createdAt(),
-  updatedAt: updatedAt()
-}, (t) => ({
-  slugUq: uniqueIndex('projects_slug_uq').on(t.slug),
-  listIdx: index('projects_list_idx').on(t.status, t.position)
-}));
-
-export const techTags = sqliteTable('tech_tags', {
-  id: id(),
-  slug: text('slug').notNull(),
-  name: text('name').notNull()
-}, (t) => ({ slugUq: uniqueIndex('tech_tags_slug_uq').on(t.slug) }));
-
-export const projectTags = sqliteTable('project_tags', {
-  projectId: text('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
-  tagId: text('tag_id').notNull().references(() => techTags.id, { onDelete: 'cascade' })
-}, (t) => ({ pk: primaryKey({ columns: [t.projectId, t.tagId] }) }));
-
-export const projectMedia = sqliteTable('project_media', {
-  projectId: text('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
-  mediaId: text('media_id').notNull().references(() => media.id, { onDelete: 'cascade' }),
-  position: integer('position').notNull().default(0),
-  caption: text('caption')
-}, (t) => ({ pk: primaryKey({ columns: [t.projectId, t.mediaId] }) }));
 
 // ---------- leads ----------
 export const leads = sqliteTable('leads', {
@@ -334,29 +284,6 @@ export const leadNotes = sqliteTable('lead_notes', {
   body: text('body').notNull(),
   createdAt: createdAt()
 }, (t) => ({ leadIdx: index('lead_notes_lead_idx').on(t.leadId, t.createdAt) }));
-
-// ---------- proposals ----------
-export const proposals = sqliteTable('proposals', {
-  id: id(),
-  leadId: text('lead_id').notNull().references(() => leads.id, { onDelete: 'cascade' }),
-  publicToken: text('public_token').notNull(),
-  title: text('title').notNull(),
-  bodyMd: text('body_md').notNull(),
-  scope: text('scope', { mode: 'json' }).$type<ProposalScopeItem[]>().notNull().$defaultFn(() => []),
-  priceFrom: integer('price_from'),
-  priceTo: integer('price_to'),
-  currency: text('currency').notNull().default('EUR'),
-  timelineWeeks: integer('timeline_weeks'),
-  status: text('status', { enum: PROPOSAL_STATUSES }).notNull().default('draft'),
-  validUntil: integer('valid_until', { mode: 'timestamp_ms' }),
-  sentAt: integer('sent_at', { mode: 'timestamp_ms' }),
-  viewedAt: integer('viewed_at', { mode: 'timestamp_ms' }),
-  createdAt: createdAt(),
-  updatedAt: updatedAt()
-}, (t) => ({
-  tokenUq: uniqueIndex('proposals_token_uq').on(t.publicToken),
-  leadIdx: index('proposals_lead_idx').on(t.leadId)
-}));
 
 // ---------- outbox ----------
 export const outboxMessages = sqliteTable('outbox_messages', {
@@ -395,6 +322,8 @@ export const jobs = sqliteTable('jobs', {
 }));
 ```
 
+`LEAD_STATUSES` не меняется: `proposal_sent` означает, что агентство отправило предложение клиенту вне системы, любым каналом.
+
 **Подключение** (`lib/server/db/index.ts`) выставляет PRAGMA один раз на старте, до первого запроса:
 
 ```ts
@@ -407,10 +336,9 @@ db.pragma('synchronous = NORMAL');    // safe with WAL, much faster than FULL
 Инварианты схемы:
 - `leads.contactEmail` или `leads.contactTelegram` заполнен минимум один. CHECK-констрейнт в таблице плюс проверка в `LeadService`;
 - `foreign_keys = ON` обязателен: без него SQLite молча игнорирует каскады и внешние ключи превращаются в комментарий;
-- публичный список кейсов читает только `status = 'published'`;
+- удаление заявки каскадит на `lead_notes`;
 - `outbox_messages.dedupe_key` — точка идемпотентности отправки. Формат: `<channel>:<templateKey>:<entityId>`;
 - `jobs.unique_key` дедуплицирует только незавершённые джобы: частичный уникальный индекс не мешает поставить ту же работу повторно после её завершения;
-- удаление проекта каскадит на `project_media` и `project_tags`, файлы в хранилище чистит джоб `media.gc`;
 - писатель в БД один. Второй процесс, пишущий в тот же файл, в архитектуру не закладывается.
 
 ---
@@ -424,27 +352,23 @@ db.pragma('synchronous = NORMAL');    // safe with WAL, much faster than FULL
 ```ts
 export const TOPICS = {
   LEAD_SUBMITTED:  'lead.submitted',
-  MEDIA_PROCESS:   'media.process',
-  OUTBOX_DISPATCH: 'outbox.dispatch',
-  MEDIA_GC:        'media.gc'
+  OUTBOX_DISPATCH: 'outbox.dispatch'
 } as const;
 ```
 
 | Топик | Payload | Что делает | Идемпотентность | Ретраи |
 |---|---|---|---|---|
 | `lead.submitted` | `{ leadId: string }` | Считает spamScore, создаёт outbox-запись владельцу в Telegram | `uniqueKey = 'lead.submitted:' + leadId`; outbox-вставка через `onConflictDoNothing` по `dedupeKey` | 5, exponential, старт 15 c |
-| `media.process` | `{ mediaId: string }` | Ресайз в webp/avif, thumb 400/800/1600, blurhash, `status → ready` | Пропускает работу, если `status = 'ready'` и варианты на месте | 3, старт 30 c |
 | `outbox.dispatch` | `{ messageId: string }` | Отдаёт сообщение в `Notifier` | Условный UPDATE `... where status = 'pending'`; фактическая отправка только по выигранному переходу | 5, старт 30 c |
-| `media.gc` | `{}` | Раз в сутки в 03:00, удаляет файлы без ссылок старше 24 ч | `uniqueKey = 'media.gc:' + YYYY-MM-DD`, второй постановки за день не будет | 1 |
 
-Публикация КП джобом не идёт. Переход `draft → sent` выполняется синхронно в `command()` админки условным UPDATE и сразу возвращает публичную ссылку. Фонового шага там нет, потому что доставку клиенту делает человек.
+Смена статуса заявки и заметки в админке идут синхронно в `command()`, джобов у них нет.
 
 Правила для всех хендлеров:
 - хендлер принимает только идентификатор, данные читает из БД. Дублировать бизнес-данные в payload запрещено, иначе ретрай работает на устаревшем снимке;
 - каждый переход состояния делается условным UPDATE с проверкой текущего статуса, а не чтением с последующей записью;
 - падение внешнего клиента бросает ошибку и отдаёт джоб на ретрай, никаких проглоченных `catch`;
 - исчерпан лимит ретраев — статус `failed`, текст в `jobs.last_error`, лог `error` с `jobId` и сущностью;
-- джоб пишется так, чтобы держаться внутри одной короткой транзакции. Долгая работа (ресайз изображения) делается вне транзакции, в БД пишется только результат: длинная транзакция держит единственного писателя и тормозит веб-запросы;
+- джоб пишется так, чтобы держаться внутри одной короткой транзакции. Долгая работа делается вне транзакции, в БД пишется только результат: длинная транзакция держит единственного писателя и тормозит веб-запросы;
 - хендлер не открывает вложенную транзакцию поверх уже открытой, `better-sqlite3` этого не поддерживает.
 
 **Как работает раннер** (`lib/server/queue/runner.ts`):
@@ -464,7 +388,7 @@ RETURNING *;
 - успех — `status = 'done'`, `finished_at`. Ошибка — обратно в `pending` с `run_at = now + backoff`, где backoff растёт как `base * 2^attempts` с потолком в час;
 - `attempts >= max_attempts` переводит джоб в `failed`, работа останавливается, запись остаётся для разбора;
 - джобы, зависшие в `active` дольше 10 минут (падение процесса на середине), возвращаются в `pending` при старте приложения. Отсюда требование идемпотентности: перезапущенный джоб выполнится второй раз;
-- `scheduler.ts` ставит периодические джобы с `uniqueKey`, включающим дату. Внешнего cron нет;
+- `scheduler.ts` ставит периодические джобы с `uniqueKey`, включающим дату. Внешнего cron нет. В v4 периодических топиков нет, планировщик остаётся инфраструктурой каркаса;
 - публикация джоба и изменение бизнес-данных идут в одной транзакции. Заявка и её `lead.submitted` либо коммитятся вместе, либо не коммитятся вовсе;
 - воркер стартует в `hooks.server.ts` один раз за процесс и останавливается по `SIGTERM`, дав текущему джобу доработать.
 
@@ -513,28 +437,8 @@ export interface LeadListItem {
 ```
 
 ```ts
-// lib/types/project.ts
-export type ProjectCategory = 'web' | 'mobile' | 'tma';
-export type PublishStatus = 'draft' | 'published' | 'archived';
-
-export interface MediaVariant { key: string; width: number; format: 'webp' | 'avif'; }
-export interface ProjectMetric { label: string; value: string; }
-
-export interface ProjectCard {
-  id: string; slug: string; title: string; category: ProjectCategory;
-  summary: string; cover: MediaRef | null; tags: string[]; featured: boolean;
-}
-
-export interface MediaRef {
-  id: string; alt: string | null; width: number | null; height: number | null;
-  blurhash: string | null; variants: MediaVariant[];
-}
-```
-
-```ts
 // lib/types/jobs.ts
 export interface LeadSubmittedPayload  { leadId: string }
-export interface MediaProcessPayload   { mediaId: string }
 export interface OutboxDispatchPayload { messageId: string }
 
 export interface JobQueue {
@@ -545,6 +449,18 @@ export interface JobQueue {
     options?: { uniqueKey?: string; runAt?: Date; maxAttempts?: number }
   ): void;
 }
+```
+
+```ts
+// lib/site.ts
+export interface SiteInfo {
+  name: string;                                // brand in titles, header, footer, og tags
+  telegram: { handle: string; href: string };
+  email: string;
+}
+
+/** Brand and public contacts. The brand is not chosen yet: swap it here and nowhere else. */
+export const SITE: SiteInfo = { /* ... */ };
 ```
 
 Правило: тип полей БД выводится из Drizzle (`typeof leads.$inferSelect`), руками не переписывается. В `lib/types` живут DTO границы и payload-контракты, не зеркала таблиц.
@@ -581,7 +497,8 @@ export const leadInputSchema = v.pipe(
 Правила:
 - сервер валидирует всегда, даже если клиент уже проверил;
 - поля, которые задаёт сервер (`ipHash`, `status`, `spamScore`, `publicId`, любые `id`), в схему входа не попадают. Массовое присвоение из тела запроса запрещено;
-- ошибки валидации возвращаются полем, а не общим текстом.
+- ошибки валидации возвращаются полем, а не общим текстом;
+- схемы админки (фильтры списка, смена статуса, заметка) лежат в том же `lib/schemas/lead.ts`.
 
 ---
 
@@ -589,9 +506,9 @@ export const leadInputSchema = v.pipe(
 
 **Токены.** Определяются один раз в `app.css` через `@theme`: палитра (surface, ink, accent, muted, danger), радиусы, тени, шкала типографики, ширина контейнера, длительности анимаций. Хардкод цветов и отступов в компонентах запрещён.
 
-Направление визуала: плотный, тихий, деловой. Один акцентный цвет, много воздуха, крупная типографика в hero, кейсы карточками со скриншотами. Никаких градиентных заливок во весь экран и каруселей с автопрокруткой.
+Направление визуала: плотный, тихий, деловой, для малого и среднего бизнеса. Один акцентный цвет, много воздуха, крупная типографика в hero. Работы агентства показываются настоящими интерфейсами, а не заглушками. Никаких градиентных заливок во весь экран и каруселей с автопрокруткой. Правила сборки экрана из токенов — раздел «Дизайн интерфейса» в `CLAUDE.md`. Входные данные для лендинга — `docs/design-review/2026-09-24/review.md`.
 
-**Примитивы.** База — shadcn-svelte, компоненты копируются в `lib/ui` и правятся под токены. Ниже точный перечень, который собирается в каркасе до старта фич. Эскиз пропсов фиксирован, менять с бампом версии ядра.
+**Примитивы.** База — shadcn-svelte, компоненты копируются в `lib/ui` и правятся под токены. Ниже точный перечень. Эскиз пропсов фиксирован, менять с бампом версии ядра.
 
 | Компонент | Пропсы |
 |---|---|
@@ -602,7 +519,6 @@ export const leadInputSchema = v.pipe(
 | `Select` | `value = $bindable()`, `options: {value,label}[]`, `name`, `invalid?` |
 | `RadioCards` | `value = $bindable()`, `options: {value,label,description?,icon?}[]`, `name`, `columns?: 2\|3\|4` |
 | `Checkbox` | `checked = $bindable()`, `name`, `label` |
-| `FileDrop` | `accept: string`, `maxSizeMb: number`, `multiple?`, `onfiles: (f: File[]) => void` |
 | `Badge` | `tone: 'neutral' \| 'success' \| 'warning' \| 'danger' \| 'accent'`, `children` |
 | `Card` | `padding?: 'sm' \| 'md' \| 'lg'`, `href?`, `children` |
 | `Dialog` | `open = $bindable()`, `title: string`, `description?`, `children`, `footer?: Snippet` |
@@ -616,9 +532,9 @@ export const leadInputSchema = v.pipe(
 
 Правила:
 - новую кнопку или инпут в слайсе не пишем, берём примитив. Не хватает варианта — правим примитив одним PR и указываем это в описании;
-- примитив не знает о бизнес-сущностях, никаких `lead` и `project` внутри `lib/ui`;
+- примитив не знает о бизнес-сущностях, никаких `lead` внутри `lib/ui`;
 - `kitchen-sink` роут рендерит все примитивы во всех состояниях, доступен только при `NODE_ENV !== 'production'`;
-- навигация админки задаётся массивом в `lib/ui/nav-items.ts`, разметка layout не правится под каждый новый раздел.
+- навигация админки и якоря лендинга задаются массивами в `lib/ui/nav-items.ts`, разметка layout не правится под каждый новый раздел.
 
 ---
 
@@ -635,27 +551,26 @@ export const leadInputSchema = v.pipe(
 
 **Авторизация.**
 - гард в `(admin)/+layout.server.ts` плюс проверка в каждом серверном обработчике админки. Гард на layout не считается достаточным для remote-функций и `+server.ts`;
-- публичные роуты не отдают черновики: фильтр `status = 'published'` живёт в репозитории, а не в компоненте.
+- `/login` и `/admin/...` отдают `noindex, nofollow` и не попадают в sitemap.
 
 **Вход данных.**
 - валидация valibot на каждой границе, включая query-параметры и параметры роутов;
 - только Drizzle query builder, конкатенация SQL запрещена;
-- markdown рендерится с санитайзом (allowlist тегов), `{@html}` без санитайза запрещён;
-- загрузка файлов: allowlist mime, проверка магических байт, лимит 10 МБ, случайное имя в хранилище, исходное имя только в БД. Файлы отдаются через свой роут, а не из общей статики.
+- `{@html}` без санитайза запрещён. Пользовательский текст заявки в админке выводится как текст, не как разметка.
 
 **Ответы и заголовки.**
-- CSP без `unsafe-inline` для скриптов (SvelteKit проставляет nonce/hash), `frame-ancestors 'none'` кроме страницы, встраиваемой в Telegram;
+- CSP без `unsafe-inline` для скриптов (SvelteKit проставляет nonce/hash), `frame-ancestors 'none'`;
 - `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` минимальный;
-- CSRF: встроенная проверка Origin у SvelteKit включена, не отключать.
+- CSRF: встроенная проверка Origin у SvelteKit включена, не отключать;
+- 404 и 500 отдают нейтральный текст. Стек, путь к файлу и текст исключения клиенту не показываются, только `requestId`.
 
 **Данные и приватность.**
 - IP хранится только как sha256 с серверной солью;
-- в логи не попадают тело заявки, email, токены сессий и КП;
-- публичная страница КП — единственный канал доставки клиенту, поэтому её защита критична: токен 32 байта из `crypto.randomBytes`, сравнение по времени не важно (индекс уникальный), `noindex, nofollow`, доступ закрывается по `validUntil`, лимит 30 обращений на IP в час, токен не попадает в логи и в `Referer` (страница ставит `Referrer-Policy: no-referrer`);
-- отозвать КП можно из админки: перевод в `expired` закрывает ссылку немедленно;
+- в логи не попадают тело заявки, email, Telegram-контакт и токены сессий;
+- `/thanks` показывает только публичный номер заявки, контакты и текст цели на ней не выводятся, страница отдаёт `noindex`;
 - секреты только через `$env/static/private`, `.env` в `.gitignore`, `.env.example` без значений;
-- файл БД и каталог загрузок лежат вне корня статики и не раздаются веб-сервером. Права `0600` на файл БД, владелец — пользователь сервиса. Caddy на пути к ним не смотрит;
-- `*.db`, `*.db-wal`, `*.db-shm` и каталог загрузок в `.gitignore`. Боевой файл БД в репозиторий не попадает никогда.
+- файл БД лежит вне корня статики и не раздаётся веб-сервером. Права `0600` на файл БД, владелец — пользователь сервиса. Caddy на путь к нему не смотрит;
+- `*.db`, `*.db-wal`, `*.db-shm` в `.gitignore`. Боевой файл БД в репозиторий не попадает никогда.
 
 **Антиспам формы.** Honeypot-поле, минимальное время заполнения 3 секунды, лимит 3 заявки на IP в час, накопительный `spamScore`. При превышении заявка сохраняется со `status = 'spam'` и не шлёт уведомление.
 
@@ -705,7 +620,7 @@ compilerOptions: { experimental: { async: true } }
 ```
 
 ```ts
-// routes/(public)/lead/lead.remote.ts
+// routes/(public)/_lead/lead.remote.ts
 import { form, query, getRequestEvent } from '$app/server';
 import { leadInputSchema } from '$lib/schemas/lead';
 import { container } from '$lib/server/container';
@@ -726,28 +641,27 @@ export const recentLeads = query(async () => {
 
 Правила:
 - `form()` для публичной формы заявки: работает без JS, даёт прогрессивное улучшение и валидацию одной схемой;
-- `command()` для действий админки, где JS гарантированно есть (смена статуса, сортировка перетаскиванием);
+- `command()` для действий админки, где JS гарантированно есть (смена статуса, заметка);
 - после мутации вызывать `refresh()` нужного query внутри обработчика — данные приедут в том же ответе, без второго round-trip и без `invalidateAll()`;
 - авторизацию проверять внутри каждой remote-функции. `getRequestEvent()` внутри неё не годится для авторизации доступа к странице;
 - версии `@sveltejs/kit` и `svelte` пиньтся точно: API за экспериментальным флагом, минорка может сломать сборку.
 
 ### 3. Правильный режим рендера на каждый роут
 
-Лендинг и кейсы — трафик и SEO, админка — интерактив. Режимы задаются явно, по умолчанию не оставляются.
+Лендинг — трафик и SEO, админка — интерактив. Режимы задаются явно, по умолчанию не оставляются.
 
 ```ts
 // routes/(public)/+layout.ts
-export const prerender = true;    // landing and static sections, built to HTML
-// routes/(public)/cases/[slug]/+page.ts
-export const prerender = false;   // content changes from admin, SSR + cache headers
+export const prerender = true;    // landing content is static, built to HTML
+// routes/(public)/thanks/+page.ts
+export const prerender = false;   // lead number arrives in the query string
 // routes/(admin)/+layout.ts
 export const ssr = true; export const prerender = false;
 ```
 
-- лендинг пререндерится целиком, форма остаётся рабочей за счёт `form()`;
-- кейсы отдаются SSR с `cache-control: public, max-age=60, stale-while-revalidate=600`, это снимает нагрузку без инвалидации;
-- в `load` возвращается только то, что рисуется. Полный `body` кейса не тянется в список карточек;
-- медленный побочный кусок (например, счётчики) отдаётся стримингом: возврат промиса из `load` и `{#await}` в разметке;
+- лендинг не читает БД: тексты и кейсы статические, страница пререндерится целиком, форма остаётся рабочей за счёт `form()`. Если e2e без JS на пререндере падает, лендинг переходит на SSR с `cache-control: public, max-age=60, stale-while-revalidate=600`, решение фиксируется в PR;
+- в `load` возвращается только то, что рисуется;
+- медленный побочный кусок (например, счётчики в админке) отдаётся стримингом: возврат промиса из `load` и `{#await}` в разметке;
 - `+page.ts` только когда данные публичные. Всё, что трогает БД и секреты, лежит в `+page.server.ts` или `.remote.ts`.
 
 ### 4. Серверная граница и `hooks.server.ts` как один вход
@@ -763,8 +677,8 @@ export const ssr = true; export const prerender = false;
 - повторяющийся кусок разметки — `{#snippet}` + `{@render}`, а не третий копипаст. Сниппет передаётся пропсом там, где нужен слот: `footer?: Snippet`, `row: Snippet<[T]>`;
 - `children` — тоже сниппет, типизируется `import type { Snippet } from 'svelte'`;
 - анимации через `transition:`/`animate:` из `svelte/transition`, свою реализацию не писать;
-- `<svelte:boundary>` вокруг рискованных участков (рендер markdown, встраиваемые виджеты), чтобы падение одного блока не сносило страницу;
-- изображения кейсов отдаются `<picture>` с avif/webp и `loading="lazy"`, размеры проставлены всегда — иначе layout shift съедает Lighthouse.
+- `<svelte:boundary>` вокруг рискованных участков (встраиваемые виджеты), чтобы падение одного блока не сносило страницу;
+- изображения кейсов отдаются `<picture>` с avif/webp из `static/cases/` и `loading="lazy"` ниже первого экрана, размеры проставлены всегда — иначе layout shift съедает Lighthouse.
 
 ---
 
@@ -780,7 +694,7 @@ export const ssr = true; export const prerender = false;
 - чистая доменная логика выносится в функции без состояния, чтобы её можно было бить property-based тестами.
 
 **DRY.**
-- строковый литерал, встречающийся дважды (топик, ключ шаблона, роут), выносится в константу;
+- строковый литерал, встречающийся дважды (топик, ключ шаблона, роут, якорь, имя бренда), выносится в константу;
 - одна валидационная схема на клиент и сервер, второй копии нет;
 - одна вёрстка кнопки/поля/таблицы — в `lib/ui`;
 - дублирование логики между слайсами поднимается в `lib/utils` или в сервис. Правило трёх: третий копипаст запрещён, второй допустим, если абстракция ещё не видна.
@@ -826,23 +740,23 @@ type(scope): summary
 ```
 
 - `type` из закрытого набора: `feat | fix | test | refactor | chore | docs`;
-- `scope` — область: `lead`, `projects`, `media`, `proposal`, `admin`, `ui`, `db`, `queue`, `ci`, `deploy`;
+- `scope` — область: `landing`, `lead`, `admin`, `ui`, `db`, `queue`, `ci`, `deploy`;
 - `summary` в императиве, со строчной буквы, без точки, до 50 символов, по делу;
 - тело только чтобы объяснить *почему*, не *что*. Перечисление изменённых файлов не пишется.
 
 Примеры:
 
 ```
-feat(lead): add multi-step submission form
+feat(lead): embed the brief form into the landing
 fix(queue): make outbox dispatch idempotent on retry
-test(proposal): cover send transition from draft only
+test(admin): cover lead status transitions
 refactor(ui): extract field wrapper from form inputs
 chore(deploy): pin node version in dockerfile
 ```
 
 **Ритм коммитов.** Сессия коммитит сама по ходу работы, маленькими логическими шагами после каждого осмысленного куска, не сваливает слайс одним коммитом в конце. Каждый коммит по возможности проходит `svelte-check`.
 
-**Ветки и PR.** Ветка `feat/lead-form`, `fix/outbox-retry`. PR даже при работе в одиночку: он гоняет CI-гейт и хранит историю решений. Заголовок содержит ID задачи, тело короткое: что делает слайс, какие контракты затронуты, чем покрыто тестами.
+**Ветки и PR.** Ветка `feat/landing-brief`, `fix/outbox-retry`. PR даже при работе в одиночку: он гоняет CI-гейт и хранит историю решений. Заголовок содержит ID задачи, тело короткое: что делает слайс, какие контракты затронуты, чем покрыто тестами.
 
 **Проза.** Дисциплина `stop-slop` действует на комментарии, PR и документацию: активный залог, императив, конкретика, без em-dash, без филлеров и вводных оборотов.
 
@@ -856,11 +770,11 @@ chore(deploy): pin node version in dockerfile
 
 **Обязательные типы на каждый слайс:**
 
-1. **Контрактные на стыках.** Джоб или событие слайса соответствует payload-схеме из раздела 6. Фейковый клиент — это и есть тестовый шов: валидирует вход и падает, если слайс шлёт мусор. Пример: `LeadService.submit` публикует `lead.submitted` ровно с `{ leadId }` и `singletonKey`, равным `leadId`.
-2. **Идемпотентность джобов.** На каждый хендлер тест, который гоняет его дважды с тем же payload и проверяет, что эффект ровно один: одна запись в outbox, один переход статуса, один набор вариантов картинки.
+1. **Контрактные на стыках.** Джоб или событие слайса соответствует payload-схеме из раздела 6. Фейковый клиент — это и есть тестовый шов: валидирует вход и падает, если слайс шлёт мусор. Пример: `LeadService.submit` публикует `lead.submitted` ровно с `{ leadId }` и `uniqueKey`, равным `'lead.submitted:' + leadId`.
+2. **Идемпотентность джобов.** На каждый хендлер тест, который гоняет его дважды с тем же payload и проверяет, что эффект ровно один: одна запись в outbox, один переход статуса, одно сообщение в Telegram.
 3. **Путь ошибки.** Фейк возвращает 500 и таймаут: проверяется ретрай, запись `lastError`, отсутствие частичного состояния в БД.
-4. **Property-based (fast-check)** на чистой логике: скоринг спама, расчёт вилки цены, генерация слага, парсинг UTM. Генерятся входы, проверяются инварианты (слаг всегда url-safe и непустой, скоринг в диапазоне 0..100).
-5. **E2E (Playwright)** на денежный путь: открыть лендинг, отправить заявку, увидеть страницу благодарности, найти заявку в админке. Прогоняется на каждый PR.
+4. **Property-based (fast-check)** на чистой логике: скоринг спама, генерация публичного номера заявки, парсинг UTM. Генерятся входы, проверяются инварианты (номер уникален и читаем, скоринг в диапазоне 0..100).
+5. **E2E (Playwright)** на денежный путь: открыть лендинг, заполнить форму в секции `#brief`, увидеть страницу «спасибо» с номером, найти заявку в админке. Прогоняется на каждый PR, в том числе с выключенным JS.
 
 Тестовая БД: свежий SQLite-файл во временном каталоге на каждый прогон, миграции применяются перед тестами. Интеграционные тесты получают свой файл на тест-кейс и удаляют его после, состояние между тестами не течёт. `:memory:` годится только там, где не проверяется поведение файла и WAL. Юнит-тесты сервисов работают на фейковых репозиториях, без БД вообще.
 
@@ -874,7 +788,7 @@ chore(deploy): pin node version in dockerfile
 
 Ограничение SQLite: `ALTER TABLE` умеет мало, поэтому drizzle-kit на многие изменения генерит пересоздание таблицы с копированием данных. Перед мёржем миграции проверяй сгенерированный SQL глазами и прогоняй её на копии боевого файла, а не только на пустом.
 
-**Сид.** `scripts/seed.ts` создаёт админа, 6 демо-кейсов (2 web, 2 mobile, 2 tma), теги, 5 заявок в разных статусах, 1 черновик КП и 1 отправленное КП с рабочим токеном. Фейковые клиенты работают на тех же фикстурах: разработка и тесты идут на одних данных.
+**Сид.** `scripts/seed.ts` создаёт админа и 8 заявок: во всех статусах, всех типах, с email и с Telegram, пару с заметками, одну со `status = 'spam'`. Фейковые клиенты работают на тех же фикстурах: разработка и тесты идут на одних данных.
 
 **Конфиг.** `lib/server/config.ts` читает `$env/static/private` один раз, валидирует valibot-схемой, падает на старте при неполном наборе. Обращений к `process.env` в коде нет.
 
@@ -887,21 +801,20 @@ SESSION_SECRET=
 IP_HASH_SALT=
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_OWNER_CHAT_ID=
-UPLOADS_DIR=./var/uploads
 USE_FAKE_CLIENTS=true
 ```
 
-**Long-lead.** После сокращения объёма остался один пункт: домен, DNS и сертификат. Токен Telegram-бота получается за пять минут у BotFather, но всё равно берётся в день один, чтобы `Notifier` проверялся на живом канале. Прогрев почтового домена, SPF/DKIM/DMARC и ключ LLM из объёма выпали вместе с почтой и LLM. До готовности домена `USE_FAKE_CLIENTS=true`, весь код пишется против фейков.
+**Long-lead.** Два пункта. Первый — имя бренда: от него зависят домен, Telegram-канал агентства, почта и OG-превью. Второй — домен, DNS и сертификат. Токен Telegram-бота получается за пять минут у BotFather, но всё равно берётся в день один, чтобы `Notifier` проверялся на живом канале. До готовности домена `USE_FAKE_CLIENTS=true`, весь код пишется против фейков.
 
 **CI (гейт на PR).** `pnpm lint`, `svelte-check`, `vitest run`, миграции на чистом файле БД, `playwright test`, `vite build`. Сервисов поднимать не нужно, гейт бежит на одном раннере без docker. Деплоя нет.
 
-**CD (мёрдж в main).** Сборка, выкладка на VPS, рестарт одного процесса `node build/index.js` под systemd. Миграции применяются самим приложением на старте. Caddy терминирует TLS, проксирует, отдаёт заголовки безопасности. Откат — предыдущая сборка.
+**CD (мёрдж в main).** Сборка, выкладка на VPS, рестарт одного процесса `node build/index.js` под systemd-юнитом `agency-site`. Миграции применяются самим приложением на старте. Caddy терминирует TLS, проксирует, отдаёт заголовки безопасности. Откат — предыдущая сборка.
 
-Файл БД и каталог загрузок живут вне каталога сборки (`/var/lib/sobol-portfolio/`), выкладка их не трогает. Перед рестартом деплой снимает бэкап: откат кода без отката данных должен оставаться безопасным.
+Файл БД живёт вне каталога сборки (`/var/lib/agency-site/`), выкладка его не трогает. Перед рестартом деплой снимает бэкап: откат кода без отката данных должен оставаться безопасным.
 
 **Бэкапы.** `VACUUM INTO '/backups/app-<date>.db'` ежедневно по таймеру systemd. Команда работает на живой БД и даёт консистентную копию, поэтому останавливать сервис не нужно. Копирование файла `cp` на работающей базе запрещено: WAL остаётся снаружи и копия бьётся.
 
-Каталог загрузок архивируется тем же скриптом. Хранение 14 дней. Раз в месяц восстановление проверяется на локальной машине: подмена файла, старт, открытие админки.
+Хранение 14 дней. Раз в месяц восстановление проверяется на локальной машине: подмена файла, старт, открытие админки.
 
 ---
 
@@ -913,9 +826,9 @@ USE_FAKE_CLIENTS=true
 
 ```
 CONTRACT GAP
-Нужно: поле leads.sourcePage (varchar 255)
-Зачем: слайс S5 пишет страницу, с которой ушла заявка, для отчёта по конверсии
-Предлагаемая форма: sourcePage: varchar('source_page', { length: 255 })
+Нужно: поле leads.sourceSection (text)
+Зачем: слайс A2 пишет секцию лендинга, из которой ушла заявка, для отчёта по конверсии
+Предлагаемая форма: sourceSection: text('source_section')
 Затрагивает: schema.ts, lib/types/lead.ts (LeadInput), lib/schemas/lead.ts
 Заглушка на время ожидания: значение не пишется, поле в UI скрыто
 ```
@@ -934,6 +847,7 @@ CONTRACT GAP
 - [ ] тесты по доктрине раздела 14: выведены из критериев приёмки; на каждый джоб слайса — тест идемпотентности; на стыке — контрактный тест;
 - [ ] новых контрактов мимо `tech.md` нет;
 - [ ] UI собран из примитивов `lib/ui`, самописных кнопок и полей нет;
+- [ ] экран прошёл проверку из раздела «Дизайн интерфейса» `CLAUDE.md` на 360px и на десктопе;
 - [ ] чек-лист безопасности раздела 10 применён к затронутым местам;
 - [ ] коммиты по конвенции раздела 13, автор Sobol17, следов ассистента нет;
 - [ ] PR смёржен, автодеплой на тестовый VPS прошёл, фича проверена руками на нём.
@@ -942,110 +856,68 @@ CONTRACT GAP
 
 ## 18. Дорожная карта
 
-### Стадия 0 — каркас
+### Стадия 0 — каркас (закрыта)
 
-Фичи не начинаются, пока каркас не в `main` и чек-лист не зелёный целиком.
+Каркас собран под ядра v1–v3 и лежит в `main`: конфиг, схема и миграции, примитивы и `kitchen-sink`, layout и авторизация, очередь с раннером и планировщиком, `Notifier` с фейком, `hooks.server.ts`, эталонная вертикаль формы заявки, CI-гейт. Конфигурации деплоя в репозитории нет, поэтому деплой на VPS, Caddy, systemd и таймер бэкапа входят в слайс A5.
 
-Порядок сборки:
+### Стадия 1 — портфолио (закрыта, концепция заменена)
 
-1. Репозиторий, `pnpm`, SvelteKit + TS + Tailwind v4, ESLint/Prettier. Внешних сервисов на локальной машине нет, БД поднимается сама файлом.
-2. `lib/server/config.ts` + `.env.example`, падение на старте при неполном env.
-3. Drizzle: `schema.ts` из раздела 5, `drizzle.config.ts` на `dialect: 'sqlite'`, первая миграция, подключение с PRAGMA, автоприменение миграций на старте, `scripts/seed.ts`.
-4. Токены дизайна в `app.css`, примитивы из раздела 9 в `lib/ui`, роут `kitchen-sink`.
-5. Layout публичной части и админки, навигация массивом, гард авторизации, страница логина, argon2 + сессии + rate limit.
-6. Очередь: таблица `jobs`, `topics.ts`, `JobQueue`, раннер с захватом джоба одним UPDATE, backoff, возврат подвисших `active` при старте, планировщик периодических задач, демо-джоб.
-7. Клиенты за интерфейсами + фейки: `Notifier` (Telegram), `Storage` (файлы). Фейки копят вызовы в памяти и умеют падать по флагу.
-8. Общие типы `lib/types`, схемы `lib/schemas`, `app.d.ts`.
-9. `hooks.server.ts`: сессия, requestId, CSP и заголовки, логирование, `handleError`.
-10. **Эталонная вертикаль**: минимальная форма заявки end-to-end. `routes/(public)/lead/` + `lead.remote.ts` + `LeadService` + `LeadRepository` + джоб `lead.submitted` + outbox + фейковый `Notifier` + четыре типа тестов. Это шаблон, а не пример: каждый последующий слайс повторяет его раскладку файлов.
-11. CI-гейт и CD, деплой на тестовый VPS, Caddy, systemd на один процесс, каталог данных вне сборки, таймер бэкапа.
+Под концепцию личного портфолио сделаны S1 (CRUD кейсов), S2 (медиа), S3 (публичные кейсы), S4 (лендинг), S5 (полная форма заявки). S6–S8 отменены вместе с концепцией. Код S1–S3 сносится слайсом A1, S4 и S5 переделываются слайсами A2 и A3.
 
-**Чек-лист «каркас готов»** (проходить по пунктам, не на глаз):
+### Стадия 2 — сайт агентства
 
-- [ ] CI зелёный на тривиальном PR;
-- [ ] layout, навигация и гард авторизации в `main`, вход в админку работает;
-- [ ] все примитивы из раздела 9 отрендерены в `kitchen-sink` во всех состояниях;
-- [ ] раннер разбирает демо-джоб, ретраит его при ошибке и возвращает подвисший `active` после рестарта процесса;
-- [ ] фейки `Notifier` и `Storage` работают и умеют падать по флагу;
-- [ ] миграции проходят на чистом файле БД в CI, сид наполняет пустую базу, PRAGMA `foreign_keys` включён и каскады реально работают;
-- [ ] эталонная вертикаль (форма заявки) в `main`, заявка долетает до БД и до фейкового уведомления;
-- [ ] четыре типа тестов эталонной вертикали зелёные, включая идемпотентность `lead.submitted`;
-- [ ] задеплоено на тестовый VPS, форма отправляется на реальном домене;
-- [ ] `git log` чистый: автор Sobol17, формат Conventional Commits, следов ассистента нет.
+Один слайс = одна задача = один PR. Слайсы идут по порядку.
 
-### Стадия 1 — фичи слайсами
+**A1. Снос портфолио и переименование**
+Удаляются: роуты `cases`, `admin/projects`, `admin/media`, `media/[...key]`; `project` и `media` сервисы и репозитории, `Storage`, `ImageProcessor`, хендлер `media.process`, топики `media.process` и `media.gc`; типы и схемы `project`, `proposal`, `media`; утилиты `slug`, `markdown`, `media`, `image-type`, `project`; примитив `FileDrop`; компоненты `project-card`, `media-picture`; их тесты и хелперы; зависимости `sharp`, `blurhash`; env `UPLOADS_DIR` из конфига, `.env.example`, CI. `schema.ts` приводится к разделу 5, миграция генерится `drizzle-kit`. Блок кейсов на лендинге перестаёт читать БД и берёт массив из `landing-content.ts`, чтобы сборка оставалась зелёной до A2.
+Переименование: `package.json` → `agency-site`, имя бренда в коде только через `SITE.name` из `lib/site.ts`, литерала бренда в разметке нет.
+Контракты: раздел 5 целиком, `TOPICS`, `lib/site.ts`.
+Приёмка: `/cases` и `/admin/projects` отвечают 404. Навигация админки содержит только заявки. Миграция удаляет таблицы портфолио и не трогает `leads`, `lead_notes`, `outbox_messages`, `jobs`, `users`, `sessions`: проверено на копии файла с данными. Сид работает на новой схеме. Поиск по репо не находит `projects`, `media`, `proposal` вне миграций и changelog.
+Тесты: миграция на чистом файле и на копии с данными (заявки и заметки пережили), контрактный на `TOPICS` (только два топика, у каждого есть хендлер), существующие тесты заявки зелёные без правок.
 
-Один слайс = одна задача = один PR. Слайсы идут по порядку, параллелить нечего: работа одна.
-
-**S1. Админка: CRUD кейсов**
-Домен: `project.service.ts`, `project.repository.ts`. Роуты: `admin/projects`, `admin/projects/new`, `admin/projects/[id]`.
-Контракты: `projects`, `tech_tags`, `project_tags`, `ProjectCard`, `PublishStatus`.
-Компоненты: `Table`, `Field`, `Input`, `Textarea`, `Select`, `Badge`, `Button`, `Dialog`, `EmptyState`.
-Приёмка: создать, отредактировать, опубликовать, снять с публикации, удалить кейс. Слаг генерится из заголовка, уникален, при коллизии добавляется суффикс. Сортировка перетаскиванием сохраняет `position`. Черновик недоступен на публичных роутах.
-Тесты: контрактный на форму слайса, property-based на генератор слага, путь ошибки на дубль слага, e2e на путь «создал → опубликовал → виден на публичной странице».
-
-**S2. Медиа: загрузка и обработка**
-Домен: `media.service.ts`, `Storage`, джоб `media.process`. Роуты: `admin/media`, компонент загрузки внутри редактора кейса.
-Контракты: `media`, `project_media`, `MediaProcessPayload`, `MediaVariant`, `MediaRef`.
-Компоненты: `FileDrop`, `Skeleton`, `Dialog`.
-Приёмка: загрузка изображения проверяет mime по магическим байтам и размер, кладёт файл со случайным ключом, ставит джоб. Джоб генерит webp/avif в трёх ширинах и blurhash, переводит `status → ready`. Галерея кейса сортируется. Битый файл даёт `status = 'failed'` и понятную ошибку в UI.
-Тесты: идемпотентность `media.process` (повтор не плодит варианты), путь ошибки на битый файл, контрактный на payload, юнит на валидатор загрузки.
-
-**S3. Публичный раздел кейсов**
-Роуты: `cases`, `cases/[slug]`, `sitemap.xml`, `robots.txt`.
-Контракты: `ProjectCard`, `MediaRef`, `ProjectCategory`.
-Компоненты: `Card`, `Badge`, `Tabs`, `Pagination`, `EmptyState`, `SeoHead`.
-Приёмка: список фильтруется по категории без перезагрузки, отдаёт только опубликованное. Страница кейса рендерит санитайзенный markdown, галерею с `<picture>`, метрики, ссылки. OG-теги и JSON-LD на месте, sitemap содержит опубликованные кейсы. Lighthouse на мобиле: performance и SEO не ниже 90.
-Тесты: юнит на санитайз markdown (скрипт вырезается), контрактный на `load` (черновик не попадает в выдачу), e2e на переход «список → кейс», проверка sitemap.
-
-**S4. Лендинг**
-Роуты: `(public)/+page.svelte`, пререндер.
-Компоненты: `Section`, `Card`, `Button`, `RadioCards`, `Badge`.
-Приёмка: блоки hero, три направления (web / mobile / tma), процесс работы, стек, избранные кейсы из БД, FAQ, финальный CTA на форму. Пререндер собирает страницу в HTML, форма остаётся рабочей. Контентные тексты лежат в одном модуле, а не размазаны по разметке. Адаптив от 360px, темы контрастны по WCAG AA.
-Тесты: e2e на прохождение всех якорей и CTA, юнит на выборку избранных кейсов, snapshot-проверка контентного модуля не нужна.
-
-**S5. Форма заявки, полная версия**
-Роуты: `lead`, `thanks`. Расширение эталонной вертикали.
-Контракты: `LeadInput`, `RequestMeta`, `leadInputSchema`, `leads`, `lead.submitted`.
-Компоненты: `Stepper`, `RadioCards`, `Field`, `Textarea`, `Input`, `Button`, `Toast`.
-Приёмка: три шага (тип → цель, бюджет, срок → контакт), состояние формы в классе с рунами, назад-вперёд не теряет введённое. Валидация полем, ошибки видны рядом с полем. Работает без JS. UTM и referrer пишутся из query, а не из тела. Антиспам: honeypot, минимальное время, лимит на IP, `spamScore`. Успех ведёт на `thanks` с номером заявки и обещанным сроком ответа.
-Тесты: property-based на скоринг спама, контрактный на публикацию `lead.submitted`, путь ошибки при недоступной БД, e2e с выключенным JS.
-
-**S6. Админка: входящие заявки**
-Роуты: `admin/leads`, `admin/leads/[id]`.
-Контракты: `leads`, `lead_notes`, `LeadListItem`, `LeadStatus`.
-Компоненты: `Table`, `Badge`, `Tabs`, `Pagination`, `Dialog`, `Textarea`, `EmptyState`.
-Приёмка: список с фильтром по статусу и типу, поиск по имени и тексту, пагинация. Карточка заявки показывает всё, включая UTM и источник. Смена статуса через `command()` с обновлением списка в том же ответе. Заметки добавляются и не редактируются. Спам отделён в свою вкладку.
-Тесты: контрактный на переходы статусов (недопустимый переход отклоняется), юнит на фильтры репозитория, e2e на путь «заявка пришла → сменил статус → фильтр показывает верно».
-
-**S7. Коммерческое предложение, ручное**
-Домен: `proposal.service.ts`, `proposal.repository.ts`. Фоновых джобов у слайса нет. Роуты: `admin/proposals`, `admin/proposals/[id]`, публичная `p/[token]`.
-Контракты: `proposals`, `ProposalStatus`, `ProposalScopeItem`.
-Компоненты: `Field`, `Input`, `Textarea`, `Table`, `Badge`, `Button`, `Dialog`.
+**A2. Лендинг агентства с формой**
+Роуты: `(public)/+page.svelte`, `(public)/_lead/`, пререндер.
+Контракты: `LeadInput`, `leadInputSchema`, `SITE`.
+Компоненты: `Section`, `Card`, `Button`, `RadioCards`, `Badge`, `Stepper`, `Field`, `Input`, `Textarea`, `Toast`.
 Приёмка:
-- КП создаётся из карточки заявки, поля заявки (тип, цель, бюджет, срок) подставляются в шапку и не перепечатываются руками;
-- редактор один: заголовок, markdown-тело, список работ `scope`, вилка цены, срок в неделях, `validUntil`. Стартовый текст берётся из статического шаблона на тип проекта (`web`, `mobile`, `tma`), шаблоны лежат в одном модуле;
-- предпросмотр показывает ровно то, что увидит клиент;
-- кнопка «Опубликовать» делает `draft → sent` условным UPDATE, ставит `sentAt`, генерит токен и возвращает готовую ссылку с кнопкой копирования. Владелец отправляет её клиенту сам;
-- повторное нажатие ссылку не меняет и второй раз статус не двигает;
-- публичная страница по токену рендерит санитайзенный markdown, ставит `viewedAt` один раз при первом открытии, отдаёт `noindex`, после `validUntil` показывает страницу «срок истёк» без содержимого;
-- отзыв из админки переводит в `expired` и закрывает ссылку сразу;
-- в списке КП виден статус и факт просмотра клиентом.
+- композиция по дизайн-ревью: предложение и реальный интерфейс → работы → услуги (веб-приложения и Telegram Mini Apps главными) → процесс → FAQ → форма заявки. На мобиле предложение, кнопка и превью работы идут раньше длинных списков;
+- голос агентства во всей цепочке: главная, FAQ, форма, метаданные. Утверждения о сроках, ценах, опыте и результатах клиентов — только подтверждённые человеком;
+- кейсы статические: данные в `landing-content.ts`, обложки в `static/cases/` в avif/webp с размерами. Каждый кейс показывает задачу, сделанный сценарий, роль агентства и итог;
+- форма заявки встроена секцией `#brief`, отдельной страницы `/lead` нет. Все CTA ведут на якорь, выбор типа на лендинге предзаполняет форму. Шаги, валидация полем, работа без JS, антиспам и UTM из query сохраняются из S5;
+- успешная отправка ведёт на `/thanks`, ошибка показывается рядом с полем без потери введённого;
+- лендинг не читает БД и пререндерится, OG-теги и JSON-LD `Organization` берут имя из `SITE`, sitemap содержит только `/`. Адаптив от 360px, контраст по WCAG AA, Lighthouse на мобиле: performance и SEO не ниже 90.
+Тесты: e2e на денежный путь с JS и без JS, e2e на якоря и предзаполнение типа, контрактный на публикацию `lead.submitted` из формы на лендинге, юнит на контентный модуль (каждый кейс с обложкой и размерами), проверка sitemap.
 
-Тесты: контрактный на переходы статусов (`sent` достижим только из `draft`, повтор идемпотентен), юнит на подстановку шаблона по типу заявки, юнит на санитайз markdown КП, path-тест на истёкший и отозванный токен, e2e на «создал из заявки → опубликовал → открыл ссылку в чистом контексте → в админке виден просмотр».
+**A3. Страница «спасибо» и кастомная 404**
+Роуты: `(public)/thanks`, `+error.svelte`.
+Компоненты: `Button`, `Card`, `EmptyState`.
+Приёмка:
+- `/thanks` в стиле лендинга: подтверждение, что заявка отправлена, номер заявки, обещанный срок ответа, что будет дальше, прямой контакт из `SITE`. Кнопка возврата на главную. `noindex`;
+- `/thanks` без номера или с мусором в query не падает и показывает общий текст без номера;
+- 404 в стиле сайта: понятный заголовок, выход на главную и к форме `#brief`, шапка и подвал сайта на месте. Статус ответа 404;
+- 500 показывает нейтральный текст и `requestId`, без деталей исключения;
+- обе страницы проходят проверку дизайна на 360px и на десктопе.
+Тесты: e2e на `/thanks` с номером и без, e2e на несуществующий URL (статус 404, ссылка на главную работает), юнит на разбор номера из query.
 
-**S8. Уведомления в Telegram и закрытие продакшена**
-Домен: `notifier.telegram.ts`, `outbox.dispatch` на боевом клиенте, `media.gc`.
+**A4. Админка: заявки**
+Роуты: `admin` (редирект на `admin/leads`), `admin/leads`, `admin/leads/[id]`.
+Контракты: `leads`, `lead_notes`, `LeadListItem`, `LeadStatus`.
+Компоненты: `Table`, `Badge`, `Tabs`, `Pagination`, `Dialog`, `Textarea`, `Select`, `EmptyState`, `Skeleton`.
+Приёмка: список с фильтром по статусу и типу, поиск по имени и тексту цели, пагинация, новые сверху. Карточка заявки показывает всё, включая UTM, источник и `spamScore`. Смена статуса через `command()` с обновлением списка в том же ответе. Заметки добавляются и не редактируются. Спам отделён в свою вкладку и возвращается из спама одним действием.
+Тесты: контрактный на переходы статусов (недопустимый переход отклоняется), юнит на фильтры репозитория, авторизация каждой remote-функции (без сессии 401), e2e на путь «заявка пришла → сменил статус → фильтр показывает верно».
+
+**A5. Уведомления в Telegram и продакшен**
+Домен: `notifier.telegram.ts`, `outbox.dispatch` на боевом клиенте.
 Приёмка:
 - новая заявка приходит владельцу одним сообщением в Telegram: тип, бюджет, срок, имя, контакт, первые 200 символов цели, ссылка на карточку в админке;
 - дубли исключены `dedupeKey`, повторный прогон джоба второго сообщения не шлёт;
 - заявка со `status = 'spam'` уведомление не шлёт;
-- недоступность Telegram API не теряет сообщение: строка остаётся `pending`, ретраится, после исчерпания попыток пишет `lastError` и видна в админке;
+- недоступность Telegram API не теряет сообщение: строка остаётся `pending`, ретраится, после исчерпания попыток пишет `lastError` и видна в карточке заявки;
 - фейк заменён на боевого бота, `USE_FAKE_CLIENTS=false` на проде, `TELEGRAM_OWNER_CHAT_ID` проверен живым сообщением;
-- заголовки безопасности и CSP проверены на боевом домене, логи структурные и без PII, бэкап настроен и восстановление проверено, 404 и 500 оформлены, `/healthz` отвечает.
-
-Тесты: контрактный на формат сообщения (фейк валидирует payload и падает на мусоре), идемпотентность `outbox.dispatch` при повторе, путь ошибки на 500 и таймаут Telegram API, e2e smoke на прод-домене после деплоя.
+- деплой на VPS под доменом бренда, Caddy, systemd-юнит `agency-site`, каталог данных `/var/lib/agency-site/`, таймер бэкапа;
+- заголовки безопасности и CSP проверены на боевом домене, логи структурные и без PII, восстановление из бэкапа проверено, `/healthz` отвечает.
+Тесты: контрактный на формат сообщения (фейк валидирует payload и падает на мусоре), идемпотентность `outbox.dispatch` при повторе, путь ошибки на 500 и таймаут Telegram API, e2e smoke на прод-домене после деплоя: форма → «спасибо» → сообщение в Telegram.
 
 ---
 
-Конец ядра v1. Изменения — только append-only, с бампом версии и строкой в changelog.
+Конец ядра v4. Изменения — только append-only, с бампом версии и строкой в changelog.
