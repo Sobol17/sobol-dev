@@ -94,13 +94,12 @@
 		display: flex;
 		flex-direction: column;
 	}
-	.crm-drawer > div {
+	.crm-drawer > div:not([data-dialog-title]) {
 		flex: 1;
 		min-height: 0;
 	}
-	.crm-drawer > h2 {
+	.crm-drawer > [data-dialog-title] {
 		padding-right: 40px;
-		font-size: 16px;
 	}
 	.workspace-overview {
 		display: grid;

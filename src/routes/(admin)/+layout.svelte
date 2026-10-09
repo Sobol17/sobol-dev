@@ -145,7 +145,7 @@
 <Dialog
 	bind:open={menuOpen}
 	title="Навигация CRM"
-	class="crm-drawer top-0 left-0 h-dvh max-h-dvh w-80 max-w-[calc(100vw-3rem)] translate-x-0 translate-y-0 rounded-none border-0 border-r p-6 [&>button]:top-4 [&>button]:right-4 [&>button]:size-11"
+	class="crm-drawer top-0 left-0 h-dvh max-h-dvh w-80 max-w-[calc(100vw-3rem)] translate-x-0 translate-y-0 rounded-none border-0 border-r p-6 [&>[data-dialog-title]]:text-base [&>button]:top-4 [&>button]:right-4 [&>button]:size-11"
 >
 	<div class="flex h-full flex-col gap-8">
 		<a
