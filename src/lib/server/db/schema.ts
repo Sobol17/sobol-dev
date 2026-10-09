@@ -1,33 +1,14 @@
-import {
-	sqliteTable,
-	text,
-	integer,
-	index,
-	uniqueIndex,
-	primaryKey,
-	check
-} from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, index, uniqueIndex, check } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 // Relative path on purpose: drizzle-kit compiles this file outside the SvelteKit alias resolver.
-import type { MediaVariant, ProjectMetric, ProposalScopeItem, UtmParams } from '../../types/index';
+import type { UtmParams } from '../../types/index';
 
 // ---------- enums as const tuples (single source for schema and types) ----------
-export const PROJECT_CATEGORIES = ['web', 'mobile', 'tma'] as const;
-export const PUBLISH_STATUSES = ['draft', 'published', 'archived'] as const;
-export const MEDIA_STATUSES = ['pending', 'ready', 'failed'] as const;
 export const LEAD_TYPES = ['web', 'mobile', 'tma', 'other'] as const;
 export const LEAD_STATUSES = ['new', 'qualifying', 'proposal_sent', 'won', 'lost', 'spam'] as const;
 export const BUDGET_RANGES = ['under_3k', '3k_10k', '10k_30k', 'over_30k', 'unknown'] as const;
 export const TIMELINE_RANGES = ['asap', 'under_1m', '1_3m', 'over_3m', 'unknown'] as const;
-export const PROPOSAL_STATUSES = [
-	'draft',
-	'sent',
-	'viewed',
-	'accepted',
-	'declined',
-	'expired'
-] as const;
 export const OUTBOX_CHANNELS = ['telegram'] as const; // second channel is an append-only change
 export const OUTBOX_STATUSES = ['pending', 'sent', 'failed'] as const;
 export const JOB_STATUSES = ['pending', 'active', 'done', 'failed'] as const;
@@ -85,100 +66,6 @@ export const authAttempts = sqliteTable(
 	(t) => [index('auth_attempts_ip_idx').on(t.ipHash, t.createdAt)]
 );
 
-// ---------- media ----------
-export const media = sqliteTable(
-	'media',
-	{
-		id: id(),
-		storageKey: text('storage_key').notNull(),
-		mime: text('mime').notNull(),
-		width: integer('width'),
-		height: integer('height'),
-		sizeBytes: integer('size_bytes').notNull(),
-		alt: text('alt'),
-		blurhash: text('blurhash'),
-		variants: text('variants', { mode: 'json' })
-			.$type<MediaVariant[]>()
-			.notNull()
-			.$defaultFn(() => []),
-		status: text('status', { enum: MEDIA_STATUSES }).notNull().default('pending'),
-		createdAt: createdAt()
-	},
-	(t) => [uniqueIndex('media_storage_key_uq').on(t.storageKey)]
-);
-
-// ---------- portfolio ----------
-export const projects = sqliteTable(
-	'projects',
-	{
-		id: id(),
-		slug: text('slug').notNull(),
-		title: text('title').notNull(),
-		category: text('category', { enum: PROJECT_CATEGORIES }).notNull(),
-		summary: text('summary').notNull(),
-		body: text('body').notNull(), // markdown, sanitized on render
-		clientName: text('client_name'),
-		roleText: text('role_text'),
-		year: integer('year'),
-		durationWeeks: integer('duration_weeks'),
-		liveUrl: text('live_url'),
-		repoUrl: text('repo_url'),
-		coverMediaId: text('cover_media_id').references(() => media.id, { onDelete: 'set null' }),
-		metrics: text('metrics', { mode: 'json' })
-			.$type<ProjectMetric[]>()
-			.notNull()
-			.$defaultFn(() => []),
-		status: text('status', { enum: PUBLISH_STATUSES }).notNull().default('draft'),
-		featured: integer('featured', { mode: 'boolean' }).notNull().default(false),
-		position: integer('position').notNull().default(0),
-		publishedAt: integer('published_at', { mode: 'timestamp_ms' }),
-		createdAt: createdAt(),
-		updatedAt: updatedAt()
-	},
-	(t) => [
-		uniqueIndex('projects_slug_uq').on(t.slug),
-		index('projects_list_idx').on(t.status, t.position)
-	]
-);
-
-export const techTags = sqliteTable(
-	'tech_tags',
-	{
-		id: id(),
-		slug: text('slug').notNull(),
-		name: text('name').notNull()
-	},
-	(t) => [uniqueIndex('tech_tags_slug_uq').on(t.slug)]
-);
-
-export const projectTags = sqliteTable(
-	'project_tags',
-	{
-		projectId: text('project_id')
-			.notNull()
-			.references(() => projects.id, { onDelete: 'cascade' }),
-		tagId: text('tag_id')
-			.notNull()
-			.references(() => techTags.id, { onDelete: 'cascade' })
-	},
-	(t) => [primaryKey({ columns: [t.projectId, t.tagId] })]
-);
-
-export const projectMedia = sqliteTable(
-	'project_media',
-	{
-		projectId: text('project_id')
-			.notNull()
-			.references(() => projects.id, { onDelete: 'cascade' }),
-		mediaId: text('media_id')
-			.notNull()
-			.references(() => media.id, { onDelete: 'cascade' }),
-		position: integer('position').notNull().default(0),
-		caption: text('caption')
-	},
-	(t) => [primaryKey({ columns: [t.projectId, t.mediaId] })]
-);
-
 // ---------- leads ----------
 export const leads = sqliteTable(
 	'leads',
@@ -227,38 +114,6 @@ export const leadNotes = sqliteTable(
 		createdAt: createdAt()
 	},
 	(t) => [index('lead_notes_lead_idx').on(t.leadId, t.createdAt)]
-);
-
-// ---------- proposals ----------
-export const proposals = sqliteTable(
-	'proposals',
-	{
-		id: id(),
-		leadId: text('lead_id')
-			.notNull()
-			.references(() => leads.id, { onDelete: 'cascade' }),
-		publicToken: text('public_token').notNull(),
-		title: text('title').notNull(),
-		bodyMd: text('body_md').notNull(),
-		scope: text('scope', { mode: 'json' })
-			.$type<ProposalScopeItem[]>()
-			.notNull()
-			.$defaultFn(() => []),
-		priceFrom: integer('price_from'),
-		priceTo: integer('price_to'),
-		currency: text('currency').notNull().default('EUR'),
-		timelineWeeks: integer('timeline_weeks'),
-		status: text('status', { enum: PROPOSAL_STATUSES }).notNull().default('draft'),
-		validUntil: integer('valid_until', { mode: 'timestamp_ms' }),
-		sentAt: integer('sent_at', { mode: 'timestamp_ms' }),
-		viewedAt: integer('viewed_at', { mode: 'timestamp_ms' }),
-		createdAt: createdAt(),
-		updatedAt: updatedAt()
-	},
-	(t) => [
-		uniqueIndex('proposals_token_uq').on(t.publicToken),
-		index('proposals_lead_idx').on(t.leadId)
-	]
 );
 
 // ---------- outbox ----------

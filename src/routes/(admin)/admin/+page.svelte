@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { SITE } from '$lib/site';
 	import SeoHead from '$lib/components/seo-head.svelte';
 	import { Badge, Card, EmptyState, Table } from '$lib/ui';
 	import { LEAD_STATUS_LABELS, LEAD_TYPE_LABELS, formatDate } from '$lib/utils/format';
@@ -25,7 +26,7 @@
 	};
 </script>
 
-<SeoHead title="Дашборд — SobolDev" description="Административная панель." noindex />
+<SeoHead title={`Дашборд — ${SITE.name}`} description="Административная панель." noindex />
 
 <h1 class="mb-8 font-display text-[28px] tracking-[-.02em]" style="font-weight:700">Дашборд</h1>
 

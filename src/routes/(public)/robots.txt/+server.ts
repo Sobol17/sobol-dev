@@ -3,7 +3,7 @@ import type { RequestHandler } from './$types';
 
 export const prerender = false;
 
-/** The admin, the login form and proposal links stay out of every index. */
+/** The admin, the login form and private pages stay out of every index. */
 export const GET: RequestHandler = () => {
 	const base = config.PUBLIC_SITE_URL.replace(/\/$/, '');
 	const body = [
@@ -11,8 +11,6 @@ export const GET: RequestHandler = () => {
 		'Allow: /',
 		'Disallow: /admin',
 		'Disallow: /login',
-		'Disallow: /p/',
-		'Disallow: /media/',
 		'',
 		`Sitemap: ${base}/sitemap.xml`,
 		''

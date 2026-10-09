@@ -6,9 +6,6 @@ export type JobStatus = 'pending' | 'active' | 'done' | 'failed';
 export interface LeadSubmittedPayload {
 	leadId: string;
 }
-export interface MediaProcessPayload {
-	mediaId: string;
-}
 export interface OutboxDispatchPayload {
 	messageId: string;
 }

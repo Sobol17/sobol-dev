@@ -7,7 +7,6 @@
 		Dialog,
 		EmptyState,
 		Field,
-		FileDrop,
 		Input,
 		Pagination,
 		RadioCards,
@@ -30,7 +29,6 @@
 	let tab = $state('all');
 	let page = $state(2);
 	let dialogOpen = $state(false);
-	let dropped = $state<string[]>([]);
 
 	const options = [
 		{ value: 'web', label: 'Веб' },
@@ -167,19 +165,6 @@
 		</EmptyState>
 		<Skeleton variant="text" lines={4} />
 		<Skeleton variant="block" />
-	</section>
-
-	<section class="grid gap-4">
-		<h2 class="font-mono text-[11px] tracking-[.16em] text-muted uppercase">FileDrop</h2>
-		<FileDrop
-			accept="image/png,image/jpeg,image/webp"
-			maxSizeMb={10}
-			multiple
-			onfiles={(files) => (dropped = files.map((file) => file.name))}
-		/>
-		{#if dropped.length > 0}
-			<p class="font-mono text-[12px] text-muted">{dropped.join(', ')}</p>
-		{/if}
 	</section>
 
 	<section class="grid gap-4">

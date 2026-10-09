@@ -19,7 +19,6 @@ const configSchema = v.pipe(
 		IP_HASH_SALT: secret,
 		TELEGRAM_BOT_TOKEN: v.optional(v.string(), ''),
 		TELEGRAM_OWNER_CHAT_ID: v.optional(v.string(), ''),
-		UPLOADS_DIR: v.pipe(v.string(), v.minLength(1)),
 		USE_FAKE_CLIENTS: booleanFlag
 	}),
 	// Real clients need real credentials. Fail on start, not on the first notification.

@@ -20,7 +20,6 @@ jobs:
       PUBLIC_SITE_URL: http://localhost:4173
       SESSION_SECRET: ci-session-secret-not-used-in-production-000
       IP_HASH_SALT: ci-ip-hash-salt-not-used-in-production-0000
-      UPLOADS_DIR: ./var/ci/uploads
       USE_FAKE_CLIENTS: 'true'
       TELEGRAM_OWNER_CHAT_ID: fake-owner-chat
 

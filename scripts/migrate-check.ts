@@ -8,14 +8,8 @@ const EXPECTED_TABLES = [
 	'jobs',
 	'lead_notes',
 	'leads',
-	'media',
 	'outbox_messages',
-	'project_media',
-	'project_tags',
-	'projects',
-	'proposals',
 	'sessions',
-	'tech_tags',
 	'users'
 ];
 
