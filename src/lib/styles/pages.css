@@ -1,0 +1,53 @@
+@layer components {
+	.page-stage {
+		padding-block: 160px 96px;
+		min-height: 76vh;
+	}
+	.page-split {
+		display: grid;
+		grid-template-columns: 1.1fr 1fr;
+		align-items: center;
+		gap: 80px;
+	}
+	.page-title {
+		max-width: 13ch;
+		font-size: clamp(40px, 5vw, 72px);
+		line-height: 1.08;
+		letter-spacing: -0.04em;
+	}
+	.page-intro {
+		margin-top: 32px;
+		max-width: 46ch;
+		font-size: 18px;
+		line-height: 1.6;
+		color: var(--color-muted);
+	}
+	.error-number {
+		font-size: clamp(96px, 14vw, 184px);
+		font-weight: 600;
+		letter-spacing: -0.04em;
+		line-height: 1;
+		color: var(--color-accent-bright);
+	}
+	@media (max-width: 900px) {
+		.page-stage {
+			padding-block: 136px 64px;
+		}
+		.page-split {
+			grid-template-columns: 1fr;
+			gap: 40px;
+		}
+		.page-title {
+			max-width: 16ch;
+		}
+	}
+	@media (max-width: 600px) {
+		.page-stage {
+			padding-block: 120px 48px;
+		}
+		.page-intro {
+			margin-top: 24px;
+			font-size: 16px;
+		}
+	}
+}
