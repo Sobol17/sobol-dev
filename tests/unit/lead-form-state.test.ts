@@ -19,6 +19,9 @@ describe('LeadFormState', () => {
 
 		form.type = 'web';
 		form.next();
+		expect(form.step).toBe(0);
+		form.goal = 'A business goal with sufficient detail';
+		form.next();
 		expect(form.step).toBe(1);
 
 		form.back();
@@ -31,7 +34,7 @@ describe('LeadFormState', () => {
 		form.next();
 
 		expect(form.showFirstInvalid(['contactEmail', 'goal'])).toBe(true);
-		expect(form.step).toBe(1);
+		expect(form.step).toBe(0);
 	});
 
 	it('stays put when the server rejected nothing it knows about', () => {
