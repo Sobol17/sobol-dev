@@ -23,7 +23,7 @@ test.describe('lead vertical', () => {
 		await expect(page).toHaveURL(/\/thanks\?id=/);
 		const publicId = new URL(page.url()).searchParams.get('id');
 		expect(publicId).toMatch(/^[23456789CDFGHJKMNPQRTVWXY]{6}$/);
-		await expect(page.getByText('Бриф отправлен')).toBeVisible();
+		await expect(page.getByRole('heading', { name: 'Бриф отправлен', level: 1 })).toBeVisible();
 		const db = new Database('var/e2e/app.db', { readonly: true });
 		try {
 			const lead = db.prepare('select id, utm from leads where public_id = ?').get(publicId) as {
@@ -72,7 +72,7 @@ test.describe('lead vertical', () => {
 		await page.getByRole('button', { name: 'Отправить бриф' }).click();
 
 		await expect(page).toHaveURL(/\/thanks\?id=/);
-		await expect(page.getByText('Бриф отправлен')).toBeVisible();
+		await expect(page.getByRole('heading', { name: 'Бриф отправлен', level: 1 })).toBeVisible();
 		const publicId = new URL(page.url()).searchParams.get('id');
 		const db = new Database('var/e2e/app.db', { readonly: true });
 		try {
