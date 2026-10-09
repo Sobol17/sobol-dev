@@ -51,3 +51,58 @@
 		}
 	}
 }
+
+@layer components {
+	.workspace {
+		min-height: 100dvh;
+		background: var(--color-accent-soft);
+	}
+	.workspace-main {
+		padding-block: 48px 64px;
+		min-height: 72vh;
+	}
+	.workspace-overview {
+		display: grid;
+		grid-template-columns: 1fr minmax(360px, 0.8fr);
+		align-items: center;
+		gap: 40px;
+	}
+	.workspace-title {
+		font-size: clamp(36px, 4vw, 56px);
+		line-height: 1.1;
+		letter-spacing: -0.04em;
+	}
+	.auth-stage {
+		padding-block: 80px;
+	}
+	.auth-layout {
+		max-width: 1040px;
+		margin-inline: auto;
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 24px;
+	}
+	.auth-title {
+		font-size: clamp(36px, 4vw, 48px);
+		line-height: 1.1;
+		letter-spacing: -0.04em;
+	}
+	@media (max-width: 900px) {
+		.workspace-overview {
+			grid-template-columns: 1fr;
+			gap: 32px;
+		}
+	}
+	@media (max-width: 700px) {
+		.auth-layout {
+			grid-template-columns: 1fr;
+			gap: 16px;
+		}
+		.auth-stage {
+			padding-block: 32px 48px;
+		}
+		.workspace-main {
+			padding-block: 32px 48px;
+		}
+	}
+}

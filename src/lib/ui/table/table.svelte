@@ -29,13 +29,13 @@
 <div class={cn('overflow-x-auto rounded-card border border-line bg-surface', className)}>
 	<table class="w-full border-collapse text-[14px]">
 		<thead>
-			<tr class="border-b border-line">
+			<tr class="border-b border-line bg-accent-soft">
 				{#each columns as column (column.key)}
 					<th
 						scope="col"
 						style={column.width ? `width:${column.width}` : undefined}
 						class={cn(
-							'px-5 py-4 font-mono text-[11px] font-normal tracking-[.12em] text-muted uppercase',
+							'px-6 py-4 text-xs leading-4 font-medium text-muted',
 							ALIGN[column.align ?? 'left']
 						)}
 					>
