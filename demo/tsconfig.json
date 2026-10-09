@@ -13,7 +13,8 @@
 		"../src/lib/**/*.ts",
 		"../src/lib/**/*.svelte",
 		"../src/routes/(admin)/_components/**/*.svelte",
-		"../src/routes/(public)/_components/**/*.svelte"
+		"../src/routes/(public)/_components/**/*.svelte",
+		"../src/app.d.ts"
 	],
 	"exclude": ["../src/lib/server/**", "../src/routes/(public)/_components/brief.svelte"]
 }
