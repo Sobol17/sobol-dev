@@ -1,6 +1,6 @@
 @layer components {
 	.page-stage {
-		padding-block: 160px 96px;
+		padding-block: 80px;
 		min-height: 76vh;
 	}
 	.page-split {
@@ -31,7 +31,7 @@
 	}
 	@media (max-width: 900px) {
 		.page-stage {
-			padding-block: 136px 64px;
+			padding-block: 64px;
 		}
 		.page-split {
 			grid-template-columns: 1fr;
@@ -43,7 +43,7 @@
 	}
 	@media (max-width: 600px) {
 		.page-stage {
-			padding-block: 120px 48px;
+			padding-block: 40px 48px;
 		}
 		.page-intro {
 			margin-top: 24px;
