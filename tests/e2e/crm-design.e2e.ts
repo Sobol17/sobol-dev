@@ -39,9 +39,44 @@ test('a submitted lead remains readable as a card at 360px', async ({ page }) =>
 	expect(
 		await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)
 	).toBeLessThanOrEqual(1);
-	await page.getByRole('button', { name: 'Выйти', exact: true }).click();
+	await page.getByRole('button', { name: 'Открыть навигацию' }).click();
+	await page.getByRole('dialog').getByRole('button', { name: 'Выйти', exact: true }).click();
 	await expect(page.getByRole('heading', { name: 'Вход в CRM', exact: true })).toBeVisible();
 	expect(
 		await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)
 	).toBeLessThanOrEqual(1);
+});
+
+test('CRM navigation adapts to the viewport and supports keyboard dismissal', async ({ page }) => {
+	await page.setViewportSize({ width: 1440, height: 900 });
+	await loginAsAdmin(page);
+	const sidebar = page.getByRole('complementary', { name: 'Боковая панель' });
+	await expect(sidebar).toBeVisible();
+	await expect(sidebar.getByRole('link', { name: 'Заявки', exact: true })).toHaveAttribute(
+		'aria-current',
+		'page'
+	);
+	const sidebarBounds = await sidebar.boundingBox();
+	const contentBounds = await page.getByRole('main').boundingBox();
+	expect(sidebarBounds!.x + sidebarBounds!.width).toBeLessThanOrEqual(contentBounds!.x);
+	await expect(page.getByRole('button', { name: 'Открыть навигацию' })).toBeHidden();
+	await page.setViewportSize({ width: 360, height: 800 });
+	const opener = page.getByRole('button', { name: 'Открыть навигацию' });
+	await expect(sidebar).toBeHidden();
+	await opener.click();
+	const drawer = page.getByRole('dialog', { name: 'Навигация CRM' });
+	await expect(drawer).toBeVisible();
+	await page.keyboard.press('Tab');
+	expect(await drawer.evaluate((element) => element.contains(document.activeElement))).toBe(true);
+	await page.keyboard.press('Escape');
+	await expect(drawer).toBeHidden();
+	await expect(opener).toBeFocused();
+	await opener.click();
+	await drawer.getByRole('link', { name: 'Заявки', exact: true }).click();
+	await expect(drawer).toBeHidden();
+	await expect(page.getByRole('heading', { name: 'Заявки', exact: true })).toBeVisible();
+	await opener.click();
+	await page.setViewportSize({ width: 1440, height: 900 });
+	await expect(drawer).toBeHidden();
+	await expect(sidebar).toBeVisible();
 });
