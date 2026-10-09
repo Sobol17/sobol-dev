@@ -1,14 +1,16 @@
 <script lang="ts">
+	import { building } from '$app/environment';
+	import { base } from '$app/paths';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { Button } from '$lib/ui';
 	import Arrow from '$lib/components/arrow.svelte';
 	import { page } from '$app/state';
 	import { COPY, SERVICES, LABELS } from '../landing-content';
 	const briefHref = (type: string) => {
-		const params = new SvelteURLSearchParams(page.url.search);
+		const params = new SvelteURLSearchParams(building ? '' : page.url.search);
 		params.delete('/remote');
 		params.set('type', type);
-		return `/?${params}#brief`;
+		return `${base}/?${params}#brief`;
 	};
 </script>
 
