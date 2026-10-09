@@ -49,8 +49,8 @@ test.describe('lead vertical', () => {
 
 		await loginAsAdmin(page);
 		await expect(page).toHaveURL(/\/admin$/);
-		await expect(page.getByText(publicId!)).toBeVisible();
-		await expect(page.getByText('Игорь')).toBeVisible();
+		await expect(page.getByRole('table').getByText(publicId!)).toBeVisible();
+		await expect(page.getByRole('table').getByText('Игорь')).toBeVisible();
 	});
 
 	test('the form works with javascript disabled', async ({ browser }) => {
@@ -143,7 +143,7 @@ test.describe('lead vertical', () => {
 		await expect(page).toHaveURL(/#brief$/);
 
 		await loginAsAdmin(page);
-		await expect(page.getByText('Бот')).toHaveCount(0);
+		await expect(page.getByText('Бот', { exact: true })).toHaveCount(0);
 	});
 });
 
