@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { FakeNotifier } from '$lib/server/clients/notifier.fake';
-import { FakeStorage } from '$lib/server/clients/storage.fake';
 import { NotifierError } from '$lib/server/clients/notifier';
-import { StorageError } from '$lib/server/clients/storage';
 
 describe('FakeNotifier', () => {
 	it('records what was sent', async () => {
@@ -41,38 +39,5 @@ describe('FakeNotifier', () => {
 		notifier.reset();
 		await notifier.send({ recipient: 'chat', text: 'a' });
 		expect(notifier.sent).toHaveLength(1);
-	});
-});
-
-describe('FakeStorage', () => {
-	it('round-trips an object', async () => {
-		const storage = new FakeStorage();
-		const data = new Uint8Array([1, 2, 3]);
-
-		const stored = await storage.put('key/one', data, 'image/png');
-
-		expect(stored).toEqual({ key: 'key/one', sizeBytes: 3 });
-		expect(await storage.exists('key/one')).toBe(true);
-		expect(await storage.get('key/one')).toEqual(data);
-	});
-
-	it('reports a missing object instead of returning empty bytes', async () => {
-		const storage = new FakeStorage();
-
-		await expect(storage.get('nope')).rejects.toThrow(StorageError);
-	});
-
-	it('fails on demand and recovers after reset', async () => {
-		const storage = new FakeStorage();
-		storage.failNext = 1;
-
-		await expect(storage.put('k', new Uint8Array([0]), 'image/png')).rejects.toThrow(StorageError);
-		await storage.put('k', new Uint8Array([0]), 'image/png');
-
-		storage.failAlways = true;
-		await expect(storage.get('k')).rejects.toThrow(StorageError);
-
-		storage.reset();
-		expect(await storage.exists('k')).toBe(false);
 	});
 });

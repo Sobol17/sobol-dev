@@ -1,9 +1,4 @@
 import { expect, test } from '@playwright/test';
-import { loginAsAdmin } from '../helpers/e2e-admin';
-
-const TITLE = 'Кейс для главной';
-const SUMMARY = 'Избранный кейс, который лендинг показывает в блоке с проектами студии.';
-const BODY = '## Задача\n\nПоказать избранный проект на главной странице.';
 
 test.describe('landing', () => {
 	test('every anchor and both calls to action lead somewhere', async ({ page }) => {
@@ -28,7 +23,7 @@ test.describe('landing', () => {
 		await expect(page.getByText('Стоимость зависит от сценариев')).toBeVisible();
 
 		await page.getByRole('link', { name: 'Смотреть работы' }).click();
-		await expect(page).toHaveURL(/\/cases$/);
+		await expect(page).toHaveURL(/#cases$/);
 
 		await page.goto('/');
 		await page.getByRole('link', { name: 'Обсудить проект' }).first().click();
@@ -52,20 +47,10 @@ test.describe('landing', () => {
 		await expect(menu).toHaveAttribute('aria-expanded', 'false');
 	});
 
-	test('a featured case shows up in the cases block', async ({ page }) => {
-		await loginAsAdmin(page);
-
-		await page.goto('/admin/projects/new');
-		await page.getByLabel('Заголовок').fill(TITLE);
-		await page.getByLabel('Короткое описание').fill(SUMMARY);
-		await page.getByLabel('Текст кейса').fill(BODY);
-		await page.getByLabel('Показывать на главной').check();
-		await page.getByRole('button', { name: 'Создать черновик' }).click();
-		await page.getByRole('button', { name: 'Опубликовать' }).click();
-		await expect(page.getByText('Опубликован', { exact: true })).toBeVisible();
-
+	test('static examples are labelled as concepts', async ({ page }) => {
 		await page.goto('/');
-		await expect(page.locator('#cases').getByRole('heading', { name: TITLE })).toBeVisible();
+		await expect(page.locator('#cases')).toContainText('Концепты интерфейсов, не клиентские кейсы');
+		await expect(page.locator('#cases').getByRole('heading', { level: 3 })).toHaveCount(2);
 	});
 
 	test('the page fits a 360px screen without sideways scrolling', async ({ page }) => {
