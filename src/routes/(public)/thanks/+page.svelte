@@ -75,8 +75,7 @@
 				Хотите дополнить бриф? Напишите на <a
 					class="break-all text-white underline underline-offset-4"
 					href={`mailto:${SITE.email}`}>{SITE.email}</a
-				>{#if data.publicId}
-					и укажите номер заявки{/if}.
+				>{data.publicId ? ' и укажите номер заявки.' : '.'}
 			</p>
 		</Card>
 	</div>
