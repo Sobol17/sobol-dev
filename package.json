@@ -18,7 +18,10 @@
 		"db:create-admin": "tsx scripts/create-admin.ts",
 		"test:unit": "vitest",
 		"test": "vitest run && pnpm test:e2e",
-		"test:e2e": "playwright test"
+		"test:e2e": "playwright test",
+		"build:demo": "BUILD_DEMO=true vite build && touch build-demo/.nojekyll",
+		"check:demo": "BUILD_DEMO=true svelte-kit sync && BUILD_DEMO=true svelte-check --tsconfig ./demo/tsconfig.json",
+		"test:demo": "playwright test --config playwright.demo.config.ts"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [
@@ -38,6 +41,7 @@
 		"@eslint/js": "^10.0.1",
 		"@playwright/test": "^1.62.1",
 		"@sveltejs/adapter-node": "^5.5.4",
+		"@sveltejs/adapter-static": "3.0.10",
 		"@sveltejs/kit": "2.70.2",
 		"@sveltejs/vite-plugin-svelte": "^7.1.2",
 		"@tailwindcss/typography": "^0.5.19",

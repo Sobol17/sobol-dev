@@ -15,3 +15,6 @@ src/lib/server/db/migrations
 tech.md
 CLAUDE.md
 soboldev.html
+
+.svelte-kit-demo
+build-demo

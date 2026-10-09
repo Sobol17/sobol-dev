@@ -1,11 +1,31 @@
 import adapter from '@sveltejs/adapter-node';
+import staticAdapter from '@sveltejs/adapter-static';
+
+const demo = process.env.BUILD_DEMO === 'true';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	preprocess: vitePreprocess(),
 	kit: {
-		adapter: adapter(),
+		adapter: demo
+			? staticAdapter({ pages: 'build-demo', assets: 'build-demo', fallback: '404.html' })
+			: adapter(),
+		...(demo
+			? {
+					outDir: '.svelte-kit-demo',
+					paths: { base: '/sobol-dev', relative: false },
+					files: {
+						routes: 'demo/routes',
+						appTemplate: 'demo/app.html',
+						hooks: {
+							server: 'demo/hooks.server',
+							client: 'demo/hooks.client',
+							universal: 'demo/hooks'
+						}
+					}
+				}
+			: {}),
 		experimental: {
 			remoteFunctions: true
 		},
@@ -24,7 +44,7 @@ const config = {
 				'connect-src': ['self'],
 				'object-src': ['none'],
 				'base-uri': ['self'],
-				'form-action': ['self'],
+				'form-action': demo ? ['none'] : ['self'],
 				'frame-ancestors': ['none']
 			}
 		}
