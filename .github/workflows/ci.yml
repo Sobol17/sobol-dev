@@ -67,6 +67,9 @@ jobs:
       - name: End-to-end tests
         run: pnpm exec playwright test
 
+      - name: Static demo types and browser scenarios
+        run: pnpm check:demo && pnpm test:demo
+
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
