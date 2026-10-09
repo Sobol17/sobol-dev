@@ -34,7 +34,7 @@
 	class={cn(
 		'w-full appearance-none rounded-field border bg-paper px-5 py-4 text-[15px] transition outline-none',
 		'focus:border-ink focus:bg-surface',
-		invalid ? 'border-danger' : 'border-line',
+		invalid ? 'border-danger' : 'border-control-line',
 		className
 	)}
 	{...rest}

@@ -10,8 +10,8 @@ export interface NavItem {
 export const ADMIN_NAV: NavItem[] = [{ href: '/admin', label: 'Заявки' }];
 
 export const PUBLIC_NAV: NavItem[] = [
-	{ href: '/#cases', label: 'Кейсы' },
-	{ href: '/#services', label: 'Услуги' },
-	{ href: '/#process', label: 'Процесс' },
-	{ href: '/#faq', label: 'Вопросы' }
+	{ href: '/#benefits', label: 'Польза для бизнеса' },
+	{ href: '/#services', label: 'Решения' },
+	{ href: '/#cases', label: 'Примеры' },
+	{ href: '/#process', label: 'Как работаем' }
 ];
