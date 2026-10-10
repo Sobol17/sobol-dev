@@ -45,7 +45,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends caddy shellcheck
-          bash -n deploy/common.sh deploy/deploy.sh deploy/install.sh deploy/rollback.sh
+          for file in deploy/*.sh; do bash -n "$file"; done
           shellcheck -x deploy/*.sh
           caddy validate --config deploy/Caddyfile --adapter caddyfile
           systemd-analyze verify deploy/agency-site.service deploy/agency-site-backup.service deploy/agency-site-backup.timer

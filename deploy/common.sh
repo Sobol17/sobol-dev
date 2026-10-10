@@ -31,7 +31,7 @@ switch_link() {
 
 wait_for_health() {
     local attempt
-    for attempt in {1..30}; do
+    for ((attempt = 0; attempt < 30; attempt++)); do
         if curl --silent --show-error --fail --max-time 2 http://127.0.0.1:3000/healthz |
             grep -Eq '"status"[[:space:]]*:[[:space:]]*"ok"'; then
             return 0
@@ -43,9 +43,7 @@ wait_for_health() {
 
 backup_database() {
     [[ -f "$DATABASE_FILE" ]] || return 0
-    runuser -u "$service_user" -- bash -c \
-        'set -a; source "$1"; set +a; cd "$2"; pnpm exec tsx scripts/backup.ts "$3"' \
-        bash "$env_file" "$1" "$data_dir/backups"
+    runuser -u "$service_user" -- bash "$1/deploy/backup.sh" "$env_file" "$1" "$data_dir/backups"
 }
 
 activate_release() {

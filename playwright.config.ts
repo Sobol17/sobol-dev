@@ -15,8 +15,8 @@ export default defineConfig({
 		reducedMotion: 'reduce'
 	},
 	webServer: {
-		// `$env/static/private` is inlined at build time, so the build has to run with the same
-		// environment the server will use. Building here is what makes the e2e database take effect.
+		// Secrets stay static across build and runtime. A separate build database proves
+		// startup can select the persistent file without writing to it during the build.
 		command:
 			'DATABASE_FILE=./var/e2e/build.db pnpm exec vite build && pnpm exec tsx scripts/e2e-prepare.ts && node build/index.js',
 		timeout: 180_000,

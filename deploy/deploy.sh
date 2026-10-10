@@ -16,9 +16,7 @@ git -c safe.directory="$source_dir" -C "$source_dir" archive HEAD | tar -x -C "$
 chown -R "$service_user:$service_user" "$release"
 
 # Build against a disposable database while the old process serves the persistent database.
-runuser -u "$service_user" -- bash -c \
-    'set -e; set -a; source "$1"; set +a; export DATABASE_FILE="$2/var/build.db"; cd "$2"; pnpm install --frozen-lockfile; pnpm build' \
-    bash "$env_file" "$release"
+runuser -u "$service_user" -- bash "$release/deploy/build.sh" "$env_file" "$release"
 [[ -f "$release/build/index.js" ]] || { echo 'build output is missing' >&2; exit 1; }
 backup_database "$release"
 previous=$(readlink "$app_root/current" || true)
