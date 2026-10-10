@@ -45,6 +45,18 @@ describe('A4 status contract', () => {
 		}
 	}
 
+	it('refuses a stale expected status without overwriting a newer transition', async () => {
+		slice = createLeadSlice();
+		const lead = await slice.leads.submit(leadInput(), requestMeta());
+		slice.clock.advance(1000);
+		const current = slice.leads.changeStatus(lead.id, 'qualifying');
+		slice.clock.advance(1000);
+		expect(
+			slice.leadRepository.changeStatus(lead.id, 'new', 'lost', slice.clock.now())
+		).toBeUndefined();
+		expect(slice.leadRepository.findById(lead.id)).toEqual(current);
+	});
+
 	it('restores spam without losing its metadata or notes and does not resend a notification', async () => {
 		slice = createLeadSlice();
 		const lead = await slice.leads.submit(
