@@ -81,6 +81,7 @@ export class LeadService {
 		return { total: this.leads.count(), fresh: this.leads.countByStatus('new') };
 	}
 
+	/** Read the filtered page together with the counters used by the admin workspace. */
 	list(input: v.InferOutput<typeof leadListSchema>) {
 		return {
 			...this.leads.list(input),
@@ -88,6 +89,7 @@ export class LeadService {
 		};
 	}
 
+	/** Return the original submission and its append-only history, or reject a missing id. */
 	detail(id: string) {
 		const lead = this.leads.findById(id);
 		if (!lead) throw new Error('lead_not_found');
