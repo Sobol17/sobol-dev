@@ -1,55 +1,38 @@
 # agency-site
 
-Сайт диджитал-агентства: продающий лендинг со встроенной формой заявки, страница «спасибо»,
-кастомная 404 и админка заявок. Бренд пока не выбран, рабочее имя проекта `agency-site`.
-SvelteKit, TypeScript, Drizzle ORM, SQLite, собственная очередь в таблице `jobs` того же файла БД.
+A digital agency landing page with an embedded brief, confirmation page, custom 404 and authenticated lead workspace. SvelteKit, TypeScript, Drizzle and SQLite. Submissions persist synchronously; the application has no notification integration or background worker.
 
-Единственный источник истины по архитектуре — [`tech.md`](./tech.md). Правила работы — [`CLAUDE.md`](./CLAUDE.md),
-`AGENTS.md` ссылается на тот же файл.
+Read [`tech.md`](tech.md) for contracts and [`CLAUDE.md`](CLAUDE.md) for development rules. [`AGENTS.md`](AGENTS.md) points to the same rules.
 
-## Запуск
+## Local development
 
 ```bash
-pnpm install
-cp .env.example .env          # заполнить SESSION_SECRET и IP_HASH_SALT (по 32+ символа)
-pnpm db:seed                  # демо-заявки и админ
+pnpm install --frozen-lockfile
+cp .env.example .env
+# Set SESSION_SECRET and IP_HASH_SALT to separate values from openssl rand -hex 32.
+pnpm db:seed
 pnpm dev
 ```
 
-Приложение падает на старте, если env неполный. Секреты генерятся так:
+The seed creates demonstration leads and an account. Use `pnpm db:create-admin` to create or update the owner's account. Production deployment never runs the demonstration seed.
+
+## Checks
 
 ```bash
-openssl rand -hex 32
+pnpm lint
+pnpm check
+pnpm exec vitest run
+pnpm test:e2e
+pnpm check:demo
+pnpm test:demo
 ```
 
-## Команды
+Generate migrations with `pnpm db:generate`; never edit an applied migration. Create a verified SQLite snapshot with `pnpm db:backup <directory>`.
 
-| Команда                       | Что делает                                              |
-| ----------------------------- | ------------------------------------------------------- |
-| `pnpm dev`                    | дев-сервер                                              |
-| `pnpm build` / `pnpm preview` | сборка adapter-node и локальный прогон                  |
-| `pnpm lint`                   | prettier + eslint                                       |
-| `pnpm check`                  | svelte-check                                            |
-| `pnpm exec vitest run`        | юнит, контрактные и property-тесты                      |
-| `pnpm test:e2e`               | Playwright: собирает, готовит свою БД, поднимает сервер |
-| `pnpm db:generate`            | миграция из `schema.ts`, руками SQL не пишем            |
-| `pnpm db:seed`                | демо-заявки и админ                                     |
-| `pnpm db:create-admin`        | создать или обновить админа                             |
+## Deployment
 
-## Что важно знать
+Use [the VPS runbook](deploy/README.md): Node 22 under systemd, Caddy for HTTPS, one persistent SQLite database outside the release directories. Docker is not required. After the initial host setup, each deployment builds the checked-out commit, backs up the live database, switches the release and checks `/healthz`. A failed health check restores the previous code release.
 
-**Env читается на сборке.** `$env/static/private` инлайнится в бандл, поэтому `pnpm build`
-должен идти с тем же окружением, с которым потом стартует сервер. Playwright поэтому собирает
-проект сам, внутри своего `webServer`.
+Secrets use `$env/static/private` and must be present during the server-side build. `DATABASE_FILE` can be overridden at startup, allowing the build to use an isolated database while the service uses its persistent file. Rotate secrets or change the public site address by rebuilding; previous releases retain their build-time configuration.
 
-**Писатель в БД один.** Воркер очереди крутится внутри процесса приложения, стартует в
-`hooks.server.ts` и останавливается по `SIGTERM`. Второй процесс на тот же файл не запускать.
-
-**Джобы идемпотентны.** Раннер возвращает подвисшие `active` в работу при старте, поэтому
-повторное исполнение — штатный сценарий.
-
-**Заголовки на статике.** Прогретые пререндером страницы отдаются как файлы и не проходят через
-`hooks.server.ts`. Заголовки безопасности для них ставит прокси.
-
-**`kitchen-sink`.** Витрина всех примитивов `$lib/ui`, доступна только вне продакшена:
-[`/kitchen-sink`](http://localhost:5173/kitchen-sink).
+Historical `jobs` and `outbox_messages` tables remain for data compatibility. Application routes do not read or write them, and old jobs never resume. Client Telegram contacts and Telegram Mini App services remain ordinary website data.
