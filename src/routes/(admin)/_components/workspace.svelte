@@ -10,9 +10,19 @@
 	let {
 		user,
 		children,
-		exit
-	}: { user: { displayName: string }; children: Snippet; exit?: Snippet } = $props();
+		exit,
+		items = ADMIN_NAV
+	}: {
+		items?: typeof ADMIN_NAV;
+		user: { displayName: string };
+		children: Snippet;
+		exit?: Snippet;
+	} = $props();
 	let menuOpen = $state(false);
+	function active(href: string) {
+		const path = page.url.pathname.replace(/\/$/, '');
+		return path === `${base}${href}` || path.startsWith(`${base}${href}/`);
+	}
 
 	afterNavigate(() => {
 		menuOpen = false;
@@ -30,19 +40,17 @@
 {#snippet navigation()}
 	<nav aria-label="Навигация CRM">
 		<ul class="grid gap-2">
-			{#each ADMIN_NAV as item (item.href)}
+			{#each items as item (item.href)}
 				<li>
 					<a
 						href={`${base}${item.href}`}
 						onclick={() => {
 							menuOpen = false;
 						}}
-						aria-current={page.url.pathname.replace(/\/$/, '') === `${base}${item.href}`
-							? 'page'
-							: undefined}
+						aria-current={active(item.href) ? 'page' : undefined}
 						class={cn(
 							'flex min-h-12 items-center gap-3 rounded-field px-4 py-3 text-sm font-medium transition-colors',
-							page.url.pathname.replace(/\/$/, '') === `${base}${item.href}`
+							active(item.href)
 								? 'bg-night text-white'
 								: 'text-muted hover:bg-accent-soft hover:text-ink'
 						)}
@@ -56,7 +64,7 @@
 							aria-hidden="true"><path d="M4 4h16v16H4zM4 14h5l1.5 3h3l1.5-3h5M8 8h8M8 11h5" /></svg
 						>
 						{item.label}
-						{#if page.url.pathname.replace(/\/$/, '') === `${base}${item.href}`}<span
+						{#if active(item.href)}<span
 								class="ml-auto size-2 rounded-pill bg-accent-bright"
 								aria-hidden="true"
 							></span>{/if}

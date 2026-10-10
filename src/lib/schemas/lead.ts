@@ -1,5 +1,5 @@
 import * as v from 'valibot';
-import { blankable } from './common';
+import { blankable, idSchema } from './common';
 
 /** Also parses the `type` query parameter the landing puts on its call to action. */
 export const leadTypeSchema = v.picklist(['web', 'mobile', 'tma', 'other']);
@@ -31,4 +31,27 @@ export const utmSchema = v.object({
 	campaign: v.optional(v.pipe(v.string(), v.maxLength(120))),
 	content: v.optional(v.pipe(v.string(), v.maxLength(120))),
 	term: v.optional(v.pipe(v.string(), v.maxLength(120)))
+});
+
+export const leadStatusSchema = v.picklist([
+	'new',
+	'qualifying',
+	'proposal_sent',
+	'won',
+	'lost',
+	'spam'
+]);
+
+export const leadListSchema = v.object({
+	view: v.optional(v.picklist(['active', 'spam']), 'active'),
+	status: v.optional(v.union([v.literal(''), leadStatusSchema]), ''),
+	type: v.optional(v.union([v.literal(''), leadTypeSchema]), ''),
+	search: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(120)), ''),
+	page: v.optional(v.pipe(v.number(), v.integer(), v.minValue(1), v.maxValue(1_000_000)), 1)
+});
+
+export const leadStatusChangeSchema = v.object({ id: idSchema, status: leadStatusSchema });
+export const leadNoteSchema = v.object({
+	id: idSchema,
+	body: v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(4000))
 });

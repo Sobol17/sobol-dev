@@ -14,7 +14,10 @@
 	};
 </script>
 
-<Workspace user={{ displayName: 'Демо-пользователь' }}>
+<Workspace
+	items={[{ href: '/admin', label: 'Заявки' }]}
+	user={{ displayName: 'Демо-пользователь' }}
+>
 	{#snippet exit()}<Button href={`${base}/`} variant="ghost" class="w-full justify-start text-muted"
 			>Выйти из демо CRM</Button
 		>{/snippet}

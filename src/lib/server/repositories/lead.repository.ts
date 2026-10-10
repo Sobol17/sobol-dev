@@ -1,7 +1,9 @@
-import { and, desc, eq, gte, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, ne, or, sql } from 'drizzle-orm';
+import type * as v from 'valibot';
+import type { leadListSchema } from '$lib/schemas/lead';
 import type { Db } from '../db/index';
-import { leads } from '../db/schema';
-import type { LeadListItem } from '$lib/types';
+import { leadNotes, leads, users } from '../db/schema';
+import type { LeadListItem, LeadStatus } from '$lib/types';
 import { excerpt } from '$lib/utils/format';
 
 export type LeadRow = typeof leads.$inferSelect;
@@ -59,6 +61,73 @@ export class LeadRepository {
 			.limit(limit)
 			.all()
 			.map(toListItem);
+	}
+
+	list(input: v.InferOutput<typeof leadListSchema>) {
+		const pattern = `%${input.search.toLowerCase().replace(/[\\%_]/g, '\\$&')}%`;
+		const where = and(
+			input.view === 'spam' ? eq(leads.status, 'spam') : ne(leads.status, 'spam'),
+			input.status ? eq(leads.status, input.status) : undefined,
+			input.type ? eq(leads.type, input.type) : undefined,
+			input.search
+				? or(
+						sql`lower_unicode(${leads.contactName}) like ${pattern} escape ${'\\'}`,
+						sql`lower_unicode(${leads.goal}) like ${pattern} escape ${'\\'}`
+					)
+				: undefined
+		);
+		const total =
+			this.db
+				.select({ count: sql<number>`count(*)` })
+				.from(leads)
+				.where(where)
+				.get()?.count ?? 0;
+		const pageCount = Math.max(1, Math.ceil(total / 20));
+		const page = Math.min(input.page, pageCount);
+		const rows = this.db
+			.select()
+			.from(leads)
+			.where(where)
+			.orderBy(desc(leads.createdAt), desc(leads.id))
+			.limit(20)
+			.offset((page - 1) * 20)
+			.all();
+		return { leads: rows.map(toListItem), total, page, pageCount };
+	}
+
+	/** The expected status prevents a stale transition from overwriting newer work. */
+	changeStatus(id: string, from: LeadStatus, status: LeadStatus, updatedAt: Date) {
+		return this.db
+			.update(leads)
+			.set({ status, updatedAt })
+			.where(and(eq(leads.id, id), eq(leads.status, from)))
+			.returning()
+			.get();
+	}
+
+	listNotes(leadId: string) {
+		return this.db
+			.select({
+				id: leadNotes.id,
+				leadId: leadNotes.leadId,
+				authorId: leadNotes.authorId,
+				body: leadNotes.body,
+				createdAt: leadNotes.createdAt,
+				authorName: users.displayName
+			})
+			.from(leadNotes)
+			.leftJoin(users, eq(users.id, leadNotes.authorId))
+			.where(eq(leadNotes.leadId, leadId))
+			.orderBy(asc(leadNotes.createdAt), asc(leadNotes.id))
+			.all();
+	}
+
+	addNote(leadId: string, authorId: string, body: string, createdAt: Date) {
+		return this.db
+			.insert(leadNotes)
+			.values({ leadId, authorId, body, createdAt })
+			.returning()
+			.get();
 	}
 }
 

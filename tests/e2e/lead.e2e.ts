@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 import { TOPICS } from '../../src/lib/server/queue/topics';
 import { expect, test } from '@playwright/test';
-import { loginAsAdmin } from '../helpers/e2e-admin';
+import { loginAsAdmin, qualifyLead } from '../helpers/e2e-admin';
 
 const GOAL = 'Нужен интернет-магазин на тридцать позиций с оплатой и выгрузкой в 1С';
 
@@ -48,9 +48,10 @@ test.describe('lead vertical', () => {
 		await expect(page).toHaveURL(/\/login\?next=/);
 
 		await loginAsAdmin(page);
-		await expect(page).toHaveURL(/\/admin$/);
+		await expect(page).toHaveURL(/\/admin\/leads$/);
 		await expect(page.getByRole('table').getByText(publicId!)).toBeVisible();
 		await expect(page.getByRole('table').getByText('Игорь')).toBeVisible();
+		await qualifyLead(page, publicId!, 'Игорь');
 	});
 
 	test('the form works with javascript disabled', async ({ browser }) => {
