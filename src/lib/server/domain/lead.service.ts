@@ -1,4 +1,4 @@
-import type { JobQueue, LeadInput, LeadListItem, LeadStatus, RequestMeta } from '$lib/types';
+import type { LeadInput, LeadListItem, LeadStatus, RequestMeta } from '$lib/types';
 import type * as v from 'valibot';
 import type { leadListSchema } from '$lib/schemas/lead';
 import { LEAD_TRANSITIONS } from '$lib/utils/lead-status';
@@ -6,7 +6,6 @@ import { generatePublicId } from '$lib/utils/public-id';
 import { isSpam, scoreSpam } from '$lib/utils/spam';
 import type { UnitOfWork } from '../db/unit-of-work';
 import type { LeadRepository, LeadRow } from '../repositories/lead.repository';
-import { TOPICS } from '../queue/topics';
 import type { Clock } from './clock';
 import { RATE_LIMITS, type RateLimitService } from './rate-limit.service';
 
@@ -15,16 +14,12 @@ const PUBLIC_ID_ATTEMPTS = 5;
 export class LeadService {
 	constructor(
 		private readonly leads: LeadRepository,
-		private readonly queue: JobQueue,
 		private readonly uow: UnitOfWork,
 		private readonly rateLimit: RateLimitService,
 		private readonly clock: Clock
 	) {}
 
-	/**
-	 * Persists a lead and schedules owner notification. The insert and the job commit together,
-	 * so a lead can never exist without its notification job or the other way round.
-	 */
+	/** Persist the scored submission synchronously; no external service participates. */
 	async submit(input: LeadInput, meta: RequestMeta): Promise<LeadRow> {
 		const now = this.clock.now();
 		const recentFromIp = meta.ipHash
@@ -44,7 +39,7 @@ export class LeadService {
 		}
 
 		return this.uow.transaction(() => {
-			const lead = this.leads.insert({
+			return this.leads.insert({
 				publicId: this.nextPublicId(),
 				type: input.type,
 				goal: input.goal,
@@ -62,14 +57,6 @@ export class LeadService {
 				createdAt: now,
 				updatedAt: now
 			});
-
-			this.queue.publish(
-				TOPICS.LEAD_SUBMITTED,
-				{ leadId: lead.id },
-				{ uniqueKey: `${TOPICS.LEAD_SUBMITTED}:${lead.id}` }
-			);
-
-			return lead;
 		});
 	}
 

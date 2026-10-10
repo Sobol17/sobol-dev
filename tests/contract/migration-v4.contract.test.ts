@@ -12,7 +12,6 @@ import {
 	jobs,
 	outboxMessages
 } from '$lib/server/db/schema';
-import { TOPICS } from '$lib/server/queue/topics';
 const dirs: string[] = [];
 afterEach(() => {
 	dirs.splice(0).forEach((dir) => rmSync(dir, { recursive: true, force: true }));
@@ -85,7 +84,7 @@ it('upgrades a consistent backup without changing existing lead, auth, outbox or
 		old.db
 			.insert(jobs)
 			.values({
-				topic: TOPICS.LEAD_SUBMITTED,
+				topic: 'lead.submitted',
 				payload: { leadId: lead.id },
 				runAt: new Date(),
 				status: 'active',

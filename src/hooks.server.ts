@@ -4,15 +4,9 @@ import { container } from '$lib/server/container';
 import { applySecurityHeaders } from '$lib/server/security/csp';
 import { SESSION_COOKIE } from '$lib/server/security/session';
 
-/** One worker per process, started once, stopped on SIGTERM with the job in flight finished. */
+/** Adapter-node emits this after draining requests, so the database stays open until then. */
 export const init: ServerInit = () => {
-	container.start();
-
-	for (const signal of ['SIGTERM', 'SIGINT'] as const) {
-		process.once(signal, () => {
-			void container.stop().then(() => process.exit(0));
-		});
-	}
+	process.once('sveltekit:shutdown', () => container.db.close());
 };
 
 export const handle: Handle = async ({ event, resolve }) => {

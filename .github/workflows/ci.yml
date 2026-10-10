@@ -20,8 +20,6 @@ jobs:
       PUBLIC_SITE_URL: http://localhost:4173
       SESSION_SECRET: ci-session-secret-not-used-in-production-000
       IP_HASH_SALT: ci-ip-hash-salt-not-used-in-production-0000
-      USE_FAKE_CLIENTS: 'true'
-      TELEGRAM_OWNER_CHAT_ID: fake-owner-chat
 
     steps:
       - uses: actions/checkout@v4
@@ -42,6 +40,15 @@ jobs:
 
       - name: Types
         run: pnpm check
+
+      - name: VPS configuration
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends caddy shellcheck
+          for file in deploy/*.sh; do bash -n "$file"; done
+          shellcheck -x deploy/*.sh
+          caddy validate --config deploy/Caddyfile --adapter caddyfile
+          systemd-analyze verify deploy/agency-site.service deploy/agency-site-backup.service deploy/agency-site-backup.timer
 
       - name: Migrations apply to a clean database
         run: pnpm exec tsx scripts/migrate-check.ts

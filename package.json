@@ -21,7 +21,8 @@
 		"test:e2e": "playwright test",
 		"build:demo": "BUILD_DEMO=true vite build && touch build-demo/.nojekyll",
 		"check:demo": "BUILD_DEMO=true svelte-kit sync && BUILD_DEMO=true svelte-check --tsconfig ./demo/tsconfig.json",
-		"test:demo": "playwright test --config playwright.demo.config.ts"
+		"test:demo": "playwright test --config playwright.demo.config.ts",
+		"db:backup": "tsx scripts/backup.ts"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [

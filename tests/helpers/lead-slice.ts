@@ -1,59 +1,23 @@
-import { createHandlers } from '$lib/server/queue/handlers';
-import { FakeNotifier } from '$lib/server/clients/notifier.fake';
 import { SqliteUnitOfWork } from '$lib/server/db/unit-of-work';
 import { FixedClock } from '$lib/server/domain/clock';
 import { LeadService } from '$lib/server/domain/lead.service';
 import { RateLimitService } from '$lib/server/domain/rate-limit.service';
 import { LeadRepository } from '$lib/server/repositories/lead.repository';
-import { OutboxRepository } from '$lib/server/repositories/outbox.repository';
-import { SqliteJobQueue } from '$lib/server/queue/queue';
-import { JobRunner } from '$lib/server/queue/runner';
-import { createLogger } from '$lib/server/log';
 import type { LeadInput, RequestMeta } from '$lib/types';
-import { createTestDb, type TestDb } from './db';
+import { createTestDb } from './db';
 
-export const OWNER_CHAT_ID = 'owner-chat';
-export const SITE_URL = 'https://example.test';
-
-/** The reference vertical wired end to end against fakes. Every test builds its own. */
+/** Wire submission and admin services against a real temporary database. */
 export function createLeadSlice(now = new Date('2026-03-01T10:00:00.000Z')) {
-	const db: TestDb = createTestDb();
+	const db = createTestDb();
 	const clock = new FixedClock(now);
-	const log = createLogger('silent');
-
-	const uow = new SqliteUnitOfWork(db.db);
-	const queue = new SqliteJobQueue(db.db, clock);
 	const leadRepository = new LeadRepository(db.db);
-	const outboxRepository = new OutboxRepository(db.db);
-	const notifier = new FakeNotifier();
-
-	const leads = new LeadService(leadRepository, queue, uow, new RateLimitService(clock), clock);
-
-	const handlers = createHandlers({
-		leads: leadRepository,
-		outbox: outboxRepository,
-		queue,
-		uow,
-		notifier,
-		clock,
-		ownerChatId: OWNER_CHAT_ID,
-		siteUrl: SITE_URL
-	});
-
-	const runner = new JobRunner(db.db, handlers, log, { clock: () => clock.now() });
-
-	return {
-		db,
-		clock,
-		queue,
-		runner,
-		handlers,
-		notifier,
-		leads,
+	const leads = new LeadService(
 		leadRepository,
-		outboxRepository,
-		dispose: () => db.drop()
-	};
+		new SqliteUnitOfWork(db.db),
+		new RateLimitService(clock),
+		clock
+	);
+	return { db, clock, leads, leadRepository, dispose: () => db.drop() };
 }
 
 export function leadInput(overrides: Partial<LeadInput> = {}): LeadInput {
