@@ -21,7 +21,7 @@ const STUBS: Record<string, string> = {
 		'printf "systemctl:%s:%s\\n" "$1" "$(readlink "$AGENCY_SITE_ROOT/current" || true)" >> "$A5_EVENTS"',
 	curl: 'target=$(readlink "$AGENCY_SITE_ROOT/current"); if [[ ${A5_HEALTH_FAIL:-0} == 1 && $target != */old ]]; then exit 22; fi; printf \'{"status":"ok"}\\n\'',
 	pnpm: `case "$1" in
-install) printf 'install\\n' >> "$A5_EVENTS" ;;
+install) if [[ \${NODE_ENV:-} == production && " $* " != *' --prod=false '* ]]; then echo 'build dependencies omitted' >&2; exit 1; fi; printf 'install\\n' >> "$A5_EVENTS" ;;
 build) printf 'build:%s\\n' "$DATABASE_FILE" >> "$A5_EVENTS"; [[ \${A5_BUILD_FAIL:-0} != 1 ]] || exit 1; mkdir -p build; touch build/index.js ;;
 exec) printf 'backup\\n' >> "$A5_EVENTS" ;;
 esac`
@@ -92,7 +92,7 @@ function prepareDirectories(
 	const envFile = join(directory, 'app.env');
 	writeFileSync(
 		envFile,
-		`DATABASE_FILE=${data}/app.db\nHOST=127.0.0.1\nPORT=3000\nPUBLIC_SITE_URL=https://example.test\nORIGIN=https://example.test\n`
+		`DATABASE_FILE=${data}/app.db\nNODE_ENV=production\nHOST=127.0.0.1\nPORT=3000\nPUBLIC_SITE_URL=https://example.test\nORIGIN=https://example.test\n`
 	);
 	return envFile;
 }

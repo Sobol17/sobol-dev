@@ -52,7 +52,7 @@ git pull --ff-only
 sudo bash deploy/deploy.sh
 ```
 
-The checkout must have no tracked changes. The script archives its exact commit into a new release, installs from the lockfile as the service user and builds on the VPS. Native dependencies therefore match the host. Build and dependency failures leave the current release running.
+The checkout must have no tracked changes. The script archives its exact commit into a new release, installs from the lockfile as the service user and builds on the VPS. It explicitly includes development dependencies for Vite, account creation and backup scripts, even with `NODE_ENV=production`; these tools stay in the private release directory. Native dependencies therefore match the host. Build and dependency failures leave the current release running.
 
 Build-time secrets and public address come from the service environment. The build uses a temporary SQLite path inside its own release. At startup the service overrides only `DATABASE_FILE` with `/var/lib/agency-site/app.db`, keeping migrations away from the live database during the build. Secrets remain static. Their rotation and public-domain changes require a rebuild; previous code releases retain their earlier configuration.
 

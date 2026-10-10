@@ -8,5 +8,5 @@ source "$1"
 set +a
 export DATABASE_FILE="$2/var/build.db"
 cd -- "$2"
-pnpm install --frozen-lockfile
+pnpm install --frozen-lockfile --prod=false
 pnpm build

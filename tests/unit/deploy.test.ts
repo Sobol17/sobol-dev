@@ -7,7 +7,7 @@ let host: ReturnType<typeof createDeployFixture>;
 afterEach(() => host?.dispose());
 
 describe('VPS release lifecycle', () => {
-	it('builds with an isolated database, backs up before restarting and preserves live data', () => {
+	it('builds in the production environment, isolates its database and backs up before restarting', () => {
 		host = createDeployFixture();
 		const result = host.run('deploy.sh');
 		expect(result.status, result.stderr).toBe(0);
