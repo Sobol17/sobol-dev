@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { COPY, FORM } from '../landing-content';
 	import { leadInputSchema } from '$lib/schemas/lead';
-	import { onMount, untrack, tick } from 'svelte';
+	import { onMount, untrack, tick, flushSync } from 'svelte';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
@@ -98,9 +98,9 @@
 		for (const [key, value] of remote) params.set(key, value);
 		return `${page.url.pathname}?${params}#brief`;
 	});
-	async function advance(direction: 'next' | 'back') {
-		form[direction]();
-		await tick();
+	function advance(direction: 'next' | 'back') {
+		// Move focus before another input event can reach the newly visible step.
+		flushSync(() => form[direction]());
 		const name = form.step === 0 ? 'goal' : form.step === 1 ? 'budget' : 'contactName';
 		(formElement.elements.namedItem(name) as HTMLElement | null)?.focus();
 	}

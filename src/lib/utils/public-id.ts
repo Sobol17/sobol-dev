@@ -1,3 +1,4 @@
+import * as v from 'valibot';
 import { randomInt } from 'node:crypto';
 
 /** No vowels and no lookalikes: the id gets read out loud over the phone. */
@@ -10,4 +11,12 @@ export function generatePublicId(): string {
 		id += ALPHABET[randomInt(ALPHABET.length)];
 	}
 	return id;
+}
+
+const publicIdSchema = v.pipe(v.string(), v.regex(new RegExp(`^[${ALPHABET}]{${LENGTH}}$`)));
+
+/** Reject arbitrary query text before rendering a public reference. */
+export function parsePublicId(value: unknown): string | null {
+	const parsed = v.safeParse(publicIdSchema, value);
+	return parsed.success ? parsed.output : null;
 }

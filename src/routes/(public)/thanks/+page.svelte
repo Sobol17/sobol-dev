@@ -1,43 +1,82 @@
 <script lang="ts">
 	import { SITE } from '$lib/site';
-	import { page } from '$app/state';
 	import SeoHead from '$lib/components/seo-head.svelte';
-	import { Button } from '$lib/ui';
-
-	const publicId = $derived(page.url.searchParams.get('id'));
+	import Arrow from '$lib/components/arrow.svelte';
+	import { Button, Card } from '$lib/ui';
+	import type { PageData } from './$types';
+	let { data }: { data: PageData } = $props();
 </script>
 
 <SeoHead
-	title={`Заявка отправлена — ${SITE.name}`}
-	description="Заявка принята. Ответим по указанному контакту в течение рабочего дня."
+	title={`Бриф отправлен · ${SITE.name}`}
+	description="Мы получили вашу заявку и свяжемся по указанному контакту."
 	noindex
 />
 
-<section class="pt-36 pb-20 md:pt-44 md:pb-28">
-	<div class="container-page max-w-[640px]">
-		<div class="rounded-card border border-line bg-accent-soft p-8 md:p-10">
-			<h1 class="font-display text-[28px] tracking-[-.02em]" style="font-weight:600">
-				Бриф отправлен
-			</h1>
-
-			{#if publicId}
-				<p class="mt-4 font-mono text-[13px] text-muted">
-					Номер заявки: <span class="text-ink">{publicId}</span>
+<section class="page-stage wrap" aria-labelledby="thanks-title">
+	<div class="page-split">
+		<div>
+			<div
+				class="mb-8 flex size-16 items-center justify-center rounded-pill bg-accent-soft text-accent"
+				aria-hidden="true"
+			>
+				<svg class="size-8" viewBox="0 0 32 32" fill="none"
+					><path
+						d="m7 16 6 6L25 9"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/></svg
+				>
+			</div>
+			<h1 id="thanks-title" class="page-title">Бриф <span class="text-accent">отправлен</span></h1>
+			<p class="page-intro">
+				Спасибо, что рассказали о задаче. Мы получили бриф и свяжемся с вами по указанному контакту.
+			</p>
+			{#if data.publicId}
+				<p class="mt-8 flex flex-wrap items-center gap-3 text-sm text-muted">
+					Номер заявки <strong
+						class="rounded-pill border border-line px-4 py-2 font-medium tracking-[.08em] text-ink"
+						>{data.publicId}</strong
+					>
 				</p>
 			{/if}
-
-			<p class="mt-5 max-w-[46ch] text-[15px] leading-relaxed text-ink/70">
-				Изучим задачу и вернёмся с уточняющими вопросами в течение рабочего дня. Если срочно, пишите
-				в Telegram
-				<a
-					href={SITE.telegram.href}
-					target="_blank"
-					rel="noopener"
-					class="font-medium text-accent underline underline-offset-4">{SITE.telegram.handle}</a
-				>.
-			</p>
-
-			<Button href="/" variant="secondary" size="md" class="mt-8">На главную</Button>
+			<div class="mt-10 flex flex-wrap gap-4">
+				<Button href="/" size="lg">На главную <Arrow /></Button>
+				<Button href={SITE.telegram.href} variant="ghost" size="lg" target="_blank" rel="noopener"
+					>Написать в Telegram</Button
+				>
+			</div>
 		</div>
+		<Card class="border-night bg-night p-8 text-white sm:p-10">
+			<h2 class="text-3xl leading-tight tracking-[-.03em]">Что будет дальше</h2>
+			<ol class="mt-8 divide-y divide-white/20">
+				<li class="flex gap-4 pb-8">
+					<span class="pt-1 text-sm text-accent-bright">01</span>
+					<div>
+						<h3 class="text-xl leading-7">Разберём задачу</h3>
+						<p class="mt-3 max-w-[46ch] leading-relaxed text-white/75">
+							Посмотрим, что вы хотите разработать и какие процессы нужно упростить.
+						</p>
+					</div>
+				</li>
+				<li class="flex gap-4 pt-8">
+					<span class="pt-1 text-sm text-accent-bright">02</span>
+					<div>
+						<h3 class="text-xl leading-7">Обсудим детали с вами</h3>
+						<p class="mt-3 max-w-[46ch] leading-relaxed text-white/75">
+							Уточним требования и предложим состав работ, чтобы оценить стоимость проекта.
+						</p>
+					</div>
+				</li>
+			</ol>
+			<p class="mt-10 border-t border-white/20 pt-6 text-sm leading-relaxed text-white/75">
+				Хотите дополнить бриф? Напишите на <a
+					class="break-all text-white underline underline-offset-4"
+					href={`mailto:${SITE.email}`}>{SITE.email}</a
+				>{data.publicId ? ' и укажите номер заявки.' : '.'}
+			</p>
+		</Card>
 	</div>
 </section>
