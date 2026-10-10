@@ -1,0 +1,19 @@
+[Unit]
+Description=Verified SQLite backup for agency site
+After=agency-site.service
+ConditionPathExists=/var/lib/agency-site/app.db
+
+[Service]
+Type=oneshot
+User=agency-site
+Group=agency-site
+WorkingDirectory=/srv/agency-site/current
+EnvironmentFile=/etc/agency-site/app.env
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/env pnpm exec tsx scripts/backup.ts /var/lib/agency-site/backups
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/agency-site

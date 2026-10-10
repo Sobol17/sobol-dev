@@ -1,0 +1,24 @@
+[Unit]
+Description=Agency site
+After=network.target
+
+[Service]
+Type=simple
+User=agency-site
+Group=agency-site
+WorkingDirectory=/srv/agency-site/current
+EnvironmentFile=/etc/agency-site/app.env
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/env node build/index.js
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=45
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/agency-site
+
+[Install]
+WantedBy=multi-user.target
