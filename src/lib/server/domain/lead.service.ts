@@ -1,4 +1,7 @@
-import type { JobQueue, LeadInput, LeadListItem, RequestMeta } from '$lib/types';
+import type { JobQueue, LeadInput, LeadListItem, LeadStatus, RequestMeta } from '$lib/types';
+import type * as v from 'valibot';
+import type { leadListSchema } from '$lib/schemas/lead';
+import { LEAD_TRANSITIONS } from '$lib/utils/lead-status';
 import { generatePublicId } from '$lib/utils/public-id';
 import { isSpam, scoreSpam } from '$lib/utils/spam';
 import type { UnitOfWork } from '../db/unit-of-work';
@@ -76,6 +79,40 @@ export class LeadService {
 
 	stats(): { total: number; fresh: number } {
 		return { total: this.leads.count(), fresh: this.leads.countByStatus('new') };
+	}
+
+	list(input: v.InferOutput<typeof leadListSchema>) {
+		return {
+			...this.leads.list(input),
+			stats: { ...this.stats(), spam: this.leads.countByStatus('spam') }
+		};
+	}
+
+	detail(id: string) {
+		const lead = this.leads.findById(id);
+		if (!lead) throw new Error('lead_not_found');
+		return { lead, notes: this.leads.listNotes(id) };
+	}
+
+	/** Apply the v5 matrix inside a short transaction; a repeated target is a no-op. */
+	changeStatus(id: string, status: LeadStatus): LeadRow {
+		return this.uow.transaction(() => {
+			const lead = this.leads.findById(id);
+			if (!lead) throw new Error('lead_not_found');
+			if (lead.status === status) return lead;
+			if (!LEAD_TRANSITIONS[lead.status].includes(status)) throw new Error('invalid_transition');
+			const updated = this.leads.changeStatus(id, lead.status, status, this.clock.now());
+			if (!updated) throw new Error('status_conflict');
+			return updated;
+		});
+	}
+
+	/** The transport supplies the authenticated author; notes have no edit or delete operation. */
+	addNote(id: string, authorId: string, body: string) {
+		return this.uow.transaction(() => {
+			if (!this.leads.findById(id)) throw new Error('lead_not_found');
+			return this.leads.addNote(id, authorId, body, this.clock.now());
+		});
 	}
 
 	/** Collisions are astronomically unlikely but the column is unique, so retry instead of throwing. */

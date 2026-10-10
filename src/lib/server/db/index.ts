@@ -27,6 +27,10 @@ export function createDb(file: string, options: { migrationsDir?: string } = {})
 	}
 
 	const sqlite = new Database(file);
+	// SQLite's built-in lower() only folds ASCII, while lead names and goals use Cyrillic.
+	sqlite.function('lower_unicode', { deterministic: true }, (value: unknown) =>
+		typeof value === 'string' ? value.toLowerCase() : null
+	);
 	sqlite.pragma('journal_mode = WAL'); // readers do not block the single writer
 	sqlite.pragma('foreign_keys = ON'); // off by default in SQLite, cascades depend on it
 	sqlite.pragma('busy_timeout = 5000'); // wait instead of throwing SQLITE_BUSY
