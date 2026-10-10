@@ -1,3 +1,5 @@
+import Database from 'better-sqlite3';
+import { TOPICS } from '../../src/lib/server/queue/topics';
 import { expect, test } from '@playwright/test';
 import { loginAsAdmin } from '../helpers/e2e-admin';
 
@@ -5,14 +7,13 @@ const GOAL = 'Нужен интернет-магазин на тридцать �
 
 test.describe('lead vertical', () => {
 	test('a visitor submits a brief and the owner sees it in the admin', async ({ page }) => {
-		await page.goto('/');
-		await page.getByRole('link', { name: 'Обсудить проект' }).first().click();
-		await expect(page).toHaveURL(/\/lead$/);
+		await page.goto('/?utm_source=telegram&utm_campaign=agency');
+		await page.getByRole('link', { name: 'Обсудить задачу' }).first().click();
+		await expect(page).toHaveURL(/#brief$/);
 
-		await page.getByRole('radio', { name: 'Сайт' }).check();
-		await page.getByRole('button', { name: 'Дальше' }).click();
-
+		await page.getByRole('radio', { name: 'Веб-сервис' }).check();
 		await page.getByLabel('Что нужно получить в итоге?').fill(GOAL);
+		await page.getByRole('button', { name: 'Дальше' }).click();
 		await page.getByRole('button', { name: 'Дальше' }).click();
 
 		await page.getByLabel('Как к вам обращаться').fill('Игорь');
@@ -23,6 +24,24 @@ test.describe('lead vertical', () => {
 		const publicId = new URL(page.url()).searchParams.get('id');
 		expect(publicId).toMatch(/^[23456789CDFGHJKMNPQRTVWXY]{6}$/);
 		await expect(page.getByText('Бриф отправлен')).toBeVisible();
+		const db = new Database('var/e2e/app.db', { readonly: true });
+		try {
+			const lead = db.prepare('select id, utm from leads where public_id = ?').get(publicId) as {
+				id: string;
+				utm: string;
+			};
+			expect(JSON.parse(lead.utm)).toEqual({ source: 'telegram', campaign: 'agency' });
+			const job = db
+				.prepare('select payload, unique_key from jobs where topic = ? and unique_key = ?')
+				.get(TOPICS.LEAD_SUBMITTED, `${TOPICS.LEAD_SUBMITTED}:${lead.id}`) as {
+				payload: string;
+				unique_key: string;
+			};
+			expect(JSON.parse(job.payload)).toEqual({ leadId: lead.id });
+			expect(job.unique_key).toBe(`${TOPICS.LEAD_SUBMITTED}:${lead.id}`);
+		} finally {
+			db.close();
+		}
 
 		// The admin is guarded: an anonymous visit lands on the login page.
 		await page.goto('/admin');
@@ -42,7 +61,7 @@ test.describe('lead vertical', () => {
 		});
 		const page = await context.newPage();
 
-		await page.goto('/lead');
+		await page.goto('/?utm_source=nojs#brief');
 		// Without JS every step is on the page at once.
 		await expect(page.getByLabel('Как к вам обращаться')).toBeVisible();
 
@@ -54,7 +73,16 @@ test.describe('lead vertical', () => {
 
 		await expect(page).toHaveURL(/\/thanks\?id=/);
 		await expect(page.getByText('Бриф отправлен')).toBeVisible();
-
+		const publicId = new URL(page.url()).searchParams.get('id');
+		const db = new Database('var/e2e/app.db', { readonly: true });
+		try {
+			const lead = db.prepare('select utm from leads where public_id = ?').get(publicId) as {
+				utm: string;
+			};
+			expect(JSON.parse(lead.utm)).toEqual({ source: 'nojs' });
+		} finally {
+			db.close();
+		}
 		await context.close();
 	});
 
@@ -68,7 +96,7 @@ test.describe('lead vertical', () => {
 		});
 		const page = await context.newPage();
 
-		await page.goto('/lead?type=tma');
+		await page.goto('/?type=tma#brief');
 		await expect(page.getByRole('radio', { name: 'Telegram Mini App' })).toBeChecked();
 
 		await context.close();
@@ -84,27 +112,27 @@ test.describe('lead vertical', () => {
 		});
 		const page = await context.newPage();
 
-		await page.goto('/lead');
-		await page.getByRole('radio', { name: 'Сайт' }).check();
+		await page.goto('/#brief');
+		await page.getByRole('radio', { name: 'Веб-сервис' }).check();
 		await page.getByLabel('Что нужно получить в итоге?').fill('Слишком коротко');
 		await page.getByLabel('Как к вам обращаться').fill('Игорь');
 		await page.getByLabel('Telegram', { exact: true }).fill('@client');
 		await page.getByRole('button', { name: 'Отправить бриф' }).click();
 
 		// The goal is too short, so the server refuses. Nothing the visitor typed is lost.
-		expect(new URL(page.url()).pathname).toBe('/lead');
+		expect(new URL(page.url()).pathname).toBe('/');
 		await expect(page.getByLabel('Как к вам обращаться')).toHaveValue('Игорь');
 		await expect(page.getByLabel('Что нужно получить в итоге?')).toHaveValue('Слишком коротко');
-		await expect(page.getByRole('radio', { name: 'Сайт' })).toBeChecked();
+		await expect(page.getByRole('radio', { name: 'Веб-сервис' })).toBeChecked();
 
 		await context.close();
 	});
 
 	test('a bot that fills the honeypot gets nothing', async ({ page }) => {
-		await page.goto('/lead');
-		await page.getByRole('radio', { name: 'Сайт' }).check();
-		await page.getByRole('button', { name: 'Дальше' }).click();
+		await page.goto('/#brief');
+		await page.getByRole('radio', { name: 'Веб-сервис' }).check();
 		await page.getByLabel('Что нужно получить в итоге?').fill(GOAL);
+		await page.getByRole('button', { name: 'Дальше' }).click();
 		await page.getByRole('button', { name: 'Дальше' }).click();
 		await page.getByLabel('Как к вам обращаться').fill('Бот');
 		await page.getByLabel('Telegram', { exact: true }).fill('@spam_bot');
@@ -112,7 +140,7 @@ test.describe('lead vertical', () => {
 		await page.getByRole('button', { name: 'Отправить бриф' }).click();
 
 		// The honeypot is a schema violation, so the submission never becomes a lead.
-		await expect(page).toHaveURL(/\/lead$/);
+		await expect(page).toHaveURL(/#brief$/);
 
 		await loginAsAdmin(page);
 		await expect(page.getByText('Бот')).toHaveCount(0);
@@ -128,7 +156,7 @@ test('health endpoint answers', async ({ request }) => {
 // Prerendered pages are served as static files and never reach `handle`; Caddy adds the
 // headers for those in production. This checks the route the application actually renders.
 test('security headers are set on server-rendered routes', async ({ request }) => {
-	const response = await request.get('/lead');
+	const response = await request.get('/');
 	expect(response.headers()['x-content-type-options']).toBe('nosniff');
 	expect(response.headers()['referrer-policy']).toBe('strict-origin-when-cross-origin');
 	expect(response.headers()['content-security-policy']).toContain("frame-ancestors 'none'");

@@ -1,103 +1,89 @@
 <script lang="ts">
+	import { page } from '$app/state';
+	import type { Snippet } from 'svelte';
 	import { SITE } from '$lib/site';
 	import Logo from '$lib/components/logo.svelte';
+	import Arrow from '$lib/components/arrow.svelte';
 	import { Button, PUBLIC_NAV } from '$lib/ui';
-
-	let { children } = $props();
-
+	import { LABELS } from './landing-content';
+	let { children }: { children: Snippet } = $props();
 	let menuOpen = $state(false);
-	function onKeydown(event: KeyboardEvent) {
+	function close(event: KeyboardEvent) {
 		if (event.key === 'Escape') menuOpen = false;
 	}
 </script>
 
-<svelte:window onkeydown={onKeydown} />
-
-<header class="fixed inset-x-0 top-0 z-40 px-4 pt-4">
-	<nav
-		class="mx-auto max-w-page rounded-[22px] border border-line bg-surface/90 shadow-nav backdrop-blur-xl"
-	>
-		<div class="flex items-center justify-between gap-4 px-4 py-3 sm:px-5">
-			<a href="/" class="flex shrink-0 items-center gap-2.5">
-				<Logo class="size-6 text-ink" />
-				<span class="font-display text-[17px] tracking-[-.02em]" style="font-weight:700">
-					{SITE.name}
-				</span>
-			</a>
-
-			<ul class="hidden items-center gap-7 text-[14px] text-ink/75 md:flex">
-				{#each PUBLIC_NAV as item (item.href)}
-					<li><a class="transition hover:text-ink" href={item.href}>{item.label}</a></li>
-				{/each}
-			</ul>
-
-			<div class="flex items-center gap-2">
-				<Button href="/lead" size="md" class="hidden sm:inline-flex">Обсудить проект</Button>
-				<button
-					type="button"
-					class="grid size-11 place-items-center rounded-field border border-line md:hidden"
-					aria-label="Меню"
-					aria-expanded={menuOpen}
-					aria-controls="mobile-navigation"
-					onclick={() => (menuOpen = !menuOpen)}
-				>
-					<svg
-						viewBox="0 0 24 24"
-						class="size-4"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="1.6"
-					>
-						<path d={menuOpen ? 'M6 6l12 12M18 6L6 18' : 'M4 7h16M4 12h16M4 17h16'} />
-					</svg>
-				</button>
-			</div>
-		</div>
-
-		{#if menuOpen}
-			<div id="mobile-navigation" class="border-t border-line px-5 py-4 md:hidden">
-				<ul class="grid gap-3 text-[15px]">
-					{#each PUBLIC_NAV as item (item.href)}
-						<li>
-							<a class="block py-1" href={item.href} onclick={() => (menuOpen = false)}>
-								{item.label}
-							</a>
-						</li>
-					{/each}
-					<li>
-						<Button href="/lead" size="lg" class="mt-1 w-full">Обсудить проект</Button>
-					</li>
-				</ul>
-			</div>
-		{/if}
-	</nav>
-</header>
-
-<main>
-	{@render children()}
-</main>
-
-<footer class="border-t border-line py-12">
-	<div class="container-page flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
-		<div class="flex items-center gap-2.5">
-			<Logo class="size-5 text-ink" />
-			<span class="font-display text-[16px] tracking-[-.02em]" style="font-weight:700">
-				{SITE.name}
-			</span>
-		</div>
-
-		<div class="flex flex-wrap gap-x-8 gap-y-3 text-[13px]">
-			<a
-				href={SITE.telegram.href}
-				target="_blank"
-				rel="noopener"
-				class="text-muted transition hover:text-ink">{SITE.telegram.handle}</a
+<svelte:window onkeydown={close} />
+<svg class="hidden" aria-hidden="true"
+	><symbol id="arrow" viewBox="0 0 24 24"
+		><path d="M5 19 19 5M5 5h14v14" fill="none" stroke="currentColor" stroke-width="1.5" /></symbol
+	><symbol id="mark" viewBox="0 0 32 32"
+		><path fill="var(--color-accent)" d="M3 3h10v10H3zM19 3h10v10H19zM3 19h10v10H3z" /><circle
+			cx="24"
+			cy="24"
+			r="6"
+			fill="var(--color-ink)"
+		/></symbol
+	></svg
+>
+<a href="#main" class="skip-link">{LABELS.skip}</a>
+<header class="site-header">
+	<div class="wrap flex items-center justify-between gap-8">
+		<a href="/" class="brand"><Logo class="brand-mark" />{SITE.name}</a>
+		<nav class="hidden items-center gap-8 lg:flex" aria-label="Основная навигация">
+			{#each PUBLIC_NAV as item (item.href)}<a
+					class="nav-link"
+					aria-current={page.url.hash === item.href.slice(1) ? 'location' : undefined}
+					href={page.url.pathname === '/' ? item.href.slice(1) : item.href}>{item.label}</a
+				>{/each}
+		</nav>
+		<div class="flex items-center gap-4">
+			<Button
+				href={page.url.pathname === '/' ? '#brief' : '/#brief'}
+				class="button button-primary header-cta hidden sm:inline-flex"
+				>{LABELS.headerCta}<Arrow /></Button
+			><Button
+				variant="ghost"
+				class="flex h-11 w-11 flex-col items-center justify-center gap-2 p-0 lg:hidden"
+				aria-label={LABELS.menu}
+				aria-expanded={menuOpen}
+				aria-controls="mobile-menu"
+				onclick={() => (menuOpen = !menuOpen)}
+				><span class="h-px w-6 bg-ink"></span><span class="h-px w-6 bg-ink"></span></Button
 			>
-			<a href={`mailto:${SITE.email}`} class="text-muted transition hover:text-ink">
-				{SITE.email}
-			</a>
 		</div>
-
-		<p class="text-[12px] text-muted">© 2026 {SITE.name}</p>
+	</div>
+	{#if menuOpen}<nav id="mobile-menu" class="mobile-menu lg:hidden">
+			{#each PUBLIC_NAV as item (item.href)}<a
+					href={page.url.pathname === '/' ? item.href.slice(1) : item.href}
+					onclick={() => (menuOpen = false)}>{item.label}</a
+				>{/each}<a
+				href={page.url.pathname === '/' ? '#brief' : '/#brief'}
+				onclick={() => (menuOpen = false)}>{LABELS.headerCta}</a
+			>
+		</nav>{/if}
+</header>
+<main id="main">{@render children()}</main>
+<footer class="wrap">
+	<div class="footer-top">
+		<div>
+			<a href="/" class="brand"><Logo class="brand-mark" />{SITE.name}</a>
+			<p class="mt-4 text-xs text-muted">{LABELS.tagline}</p>
+		</div>
+		<nav class="flex flex-wrap gap-x-8 gap-y-2" aria-label="Навигация в подвале">
+			{#each PUBLIC_NAV as item (item.href)}<a
+					href={page.url.pathname === '/' ? item.href.slice(1) : item.href}
+					class="text-link">{item.label}</a
+				>{/each}
+		</nav>
+	</div>
+	<div class="footer-bottom">
+		<p>© {new Date().getFullYear()} {SITE.name}</p>
+		<details class="footer-legal">
+			<summary>{LABELS.legalTitle}</summary>
+			<p class="max-w-prose py-4 text-sm">{LABELS.legalText}</p>
+		</details>
+		<p>{LABELS.copyright}</p>
+		<a href="#main">{LABELS.up}</a>
 	</div>
 </footer>

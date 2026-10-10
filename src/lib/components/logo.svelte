@@ -1,13 +1,12 @@
 <script lang="ts">
-	interface Props {
-		class?: string;
-	}
-
-	let { class: className = 'size-6' }: Props = $props();
+	let { class: className = 'size-8' }: { class?: string } = $props();
 </script>
 
-<svg viewBox="0 0 24 24" class={className} fill="currentColor" aria-hidden="true">
-	<path
-		d="M12 1.5c.55 5.4 4.6 9.45 10 10-5.4.55-9.45 4.6-10 10-.55-5.4-4.6-9.45-10-10 5.4-.55 9.45-4.6 10-10z"
-	/>
-</svg>
+<svg viewBox="0 0 32 32" class={className} aria-hidden="true"
+	><path fill="var(--color-accent)" d="M3 3h10v10H3zM19 3h10v10H19zM3 19h10v10H3z" /><circle
+		cx="24"
+		cy="24"
+		r="6"
+		fill="var(--color-ink)"
+	/></svg
+>

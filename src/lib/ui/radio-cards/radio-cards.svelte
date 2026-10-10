@@ -33,7 +33,7 @@
 				'group flex cursor-pointer items-start gap-3 rounded-card border p-5 transition',
 				'has-[:checked]:border-ink has-[:checked]:bg-accent-soft',
 				'has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent',
-				value === option.value ? 'border-ink bg-accent-soft' : 'border-line bg-surface'
+				value === option.value ? 'border-ink bg-accent-soft' : 'border-control-line bg-surface'
 			)}
 		>
 			<input

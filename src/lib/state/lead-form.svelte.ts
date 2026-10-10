@@ -5,7 +5,7 @@ export const LEAD_STEPS = ['Что нужно', 'Задача', 'Контакт'
 /** Which step owns which field. Drives the jump to the first field the server rejected. */
 const FIELD_STEPS: Record<string, number> = {
 	type: 0,
-	goal: 1,
+	goal: 0,
 	budget: 1,
 	timeline: 1,
 	contactName: 2,
@@ -61,7 +61,7 @@ export class LeadFormState {
 	readonly canSubmit = $derived(this.typeChosen && this.goalFilled && this.contactFilled);
 
 	readonly canAdvance = $derived(
-		this.step === 0 ? this.typeChosen : this.step === 1 ? this.goalFilled : this.canSubmit
+		this.step === 0 ? this.typeChosen && this.goalFilled : this.step === 1 ? true : this.canSubmit
 	);
 
 	next(): void {
