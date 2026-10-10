@@ -9,7 +9,8 @@ export const LEAD_TYPES = ['web', 'mobile', 'tma', 'other'] as const;
 export const LEAD_STATUSES = ['new', 'qualifying', 'proposal_sent', 'won', 'lost', 'spam'] as const;
 export const BUDGET_RANGES = ['under_3k', '3k_10k', '10k_30k', 'over_30k', 'unknown'] as const;
 export const TIMELINE_RANGES = ['asap', 'under_1m', '1_3m', 'over_3m', 'unknown'] as const;
-export const OUTBOX_CHANNELS = ['telegram'] as const; // second channel is an append-only change
+// v6 retains notification tables for existing databases; the application does not use them.
+export const OUTBOX_CHANNELS = ['telegram'] as const;
 export const OUTBOX_STATUSES = ['pending', 'sent', 'failed'] as const;
 export const JOB_STATUSES = ['pending', 'active', 'done', 'failed'] as const;
 

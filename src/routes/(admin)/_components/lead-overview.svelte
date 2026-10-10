@@ -7,7 +7,7 @@
 	let {
 		data
 	}: {
-		data: { leads: LeadListItem[]; stats: { leads: number; newLeads: number; openJobs: number } };
+		data: { leads: LeadListItem[]; stats: { leads: number; newLeads: number } };
 	} = $props();
 	import LeadRows from './lead-rows.svelte';
 </script>
@@ -65,6 +65,3 @@
 		>
 	{/if}
 </section>
-<p class="mt-6 text-sm text-muted">
-	Фоновые задачи в очереди: <span class="text-ink tabular-nums">{data.stats.openJobs}</span>
-</p>

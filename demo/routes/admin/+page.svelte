@@ -8,8 +8,7 @@
 		leads,
 		stats: {
 			leads: leads.length,
-			newLeads: leads.filter((lead) => lead.status === 'new').length,
-			openJobs: 0
+			newLeads: leads.filter((lead) => lead.status === 'new').length
 		}
 	};
 </script>

@@ -1,5 +1,4 @@
 import Database from 'better-sqlite3';
-import { TOPICS } from '../../src/lib/server/queue/topics';
 import { expect, test } from '@playwright/test';
 import { loginAsAdmin, qualifyLead } from '../helpers/e2e-admin';
 
@@ -31,14 +30,8 @@ test.describe('lead vertical', () => {
 				utm: string;
 			};
 			expect(JSON.parse(lead.utm)).toEqual({ source: 'telegram', campaign: 'agency' });
-			const job = db
-				.prepare('select payload, unique_key from jobs where topic = ? and unique_key = ?')
-				.get(TOPICS.LEAD_SUBMITTED, `${TOPICS.LEAD_SUBMITTED}:${lead.id}`) as {
-				payload: string;
-				unique_key: string;
-			};
-			expect(JSON.parse(job.payload)).toEqual({ leadId: lead.id });
-			expect(job.unique_key).toBe(`${TOPICS.LEAD_SUBMITTED}:${lead.id}`);
+			expect(db.prepare('select count(*) as n from jobs').get()).toEqual({ n: 0 });
+			expect(db.prepare('select count(*) as n from outbox_messages').get()).toEqual({ n: 0 });
 		} finally {
 			db.close();
 		}

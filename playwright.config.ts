@@ -2,7 +2,6 @@ import { defineConfig } from '@playwright/test';
 
 /**
  * E2E runs against the production build with its own database file, seeded before the run.
- * `USE_FAKE_CLIENTS` keeps Telegram out of the loop.
  */
 export default defineConfig({
 	testDir: 'tests/e2e',
@@ -18,7 +17,8 @@ export default defineConfig({
 	webServer: {
 		// `$env/static/private` is inlined at build time, so the build has to run with the same
 		// environment the server will use. Building here is what makes the e2e database take effect.
-		command: 'pnpm exec vite build && pnpm exec tsx scripts/e2e-prepare.ts && node build/index.js',
+		command:
+			'DATABASE_FILE=./var/e2e/build.db pnpm exec vite build && pnpm exec tsx scripts/e2e-prepare.ts && node build/index.js',
 		timeout: 180_000,
 		port: 4173,
 		reuseExistingServer: false,
@@ -27,8 +27,6 @@ export default defineConfig({
 			PUBLIC_SITE_URL: 'http://localhost:4173',
 			SESSION_SECRET: 'e2e-session-secret-not-used-in-production-00',
 			IP_HASH_SALT: 'e2e-ip-hash-salt-not-used-in-production-0000',
-			USE_FAKE_CLIENTS: 'true',
-			TELEGRAM_OWNER_CHAT_ID: 'fake-owner-chat',
 			ORIGIN: 'http://localhost:4173',
 			PORT: '4173'
 		}
