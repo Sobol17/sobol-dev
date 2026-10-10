@@ -4,6 +4,8 @@ import { join } from 'node:path';
 import { createDb, type DbHandle } from '$lib/server/db/index';
 
 export interface TestDb extends DbHandle {
+	file: string;
+	dir: string;
 	drop(): void;
 }
 
@@ -17,6 +19,8 @@ export function createTestDb(): TestDb {
 
 	return {
 		...handle,
+		file: join(dir, 'test.db'),
+		dir,
 		drop() {
 			handle.close();
 			rmSync(dir, { recursive: true, force: true });
