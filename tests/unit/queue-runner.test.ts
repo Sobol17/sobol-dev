@@ -34,13 +34,13 @@ describe('job queue', () => {
 
 	it('allows the same unique key again once the first job finished', async () => {
 		const { db: handle, clock, queue, log } = harness();
-		const runner = new JobRunner(handle.db, { [TOPICS.MEDIA_GC]: () => {} }, log, {
+		const runner = new JobRunner(handle.db, { [TOPICS.LEAD_SUBMITTED]: () => {} }, log, {
 			clock: () => clock.now()
 		});
 
-		queue.publish(TOPICS.MEDIA_GC, {}, { uniqueKey: 'media.gc:2026-03-01' });
+		queue.publish(TOPICS.LEAD_SUBMITTED, {}, { uniqueKey: 'lead.submitted:2026-03-01' });
 		await runner.drain();
-		queue.publish(TOPICS.MEDIA_GC, {}, { uniqueKey: 'media.gc:2026-03-01' });
+		queue.publish(TOPICS.LEAD_SUBMITTED, {}, { uniqueKey: 'lead.submitted:2026-03-01' });
 
 		expect(handle.db.select().from(jobs).all()).toHaveLength(2);
 	});
@@ -65,13 +65,13 @@ describe('job runner', () => {
 		const seen: string[] = [];
 		const runner = new JobRunner(
 			handle.db,
-			{ [TOPICS.MEDIA_GC]: (payload) => void seen.push(String(payload.tag)) },
+			{ [TOPICS.LEAD_SUBMITTED]: (payload) => void seen.push(String(payload.tag)) },
 			log,
 			{ clock: () => clock.now() }
 		);
 
-		queue.publish(TOPICS.MEDIA_GC, { tag: 'first' }, { uniqueKey: 'gc:1' });
-		queue.publish(TOPICS.MEDIA_GC, { tag: 'second' }, { uniqueKey: 'gc:2' });
+		queue.publish(TOPICS.LEAD_SUBMITTED, { tag: 'first' }, { uniqueKey: 'lead:1' });
+		queue.publish(TOPICS.LEAD_SUBMITTED, { tag: 'second' }, { uniqueKey: 'lead:2' });
 
 		expect(await runner.tick()).toBe(true);
 		expect(seen).toEqual(['first']);
@@ -125,11 +125,11 @@ describe('job runner', () => {
 		const { db: handle, clock, queue, log } = harness();
 		const runner = new JobRunner(handle.db, {}, log, { clock: () => clock.now() });
 
-		queue.publish(TOPICS.MEDIA_GC, {}, { uniqueKey: 'gc:stuck' });
+		queue.publish(TOPICS.LEAD_SUBMITTED, {}, { uniqueKey: 'lead:stuck' });
 		handle.db
 			.update(jobs)
 			.set({ status: 'active', startedAt: clock.now() })
-			.where(eq(jobs.uniqueKey, 'gc:stuck'))
+			.where(eq(jobs.uniqueKey, 'lead:stuck'))
 			.run();
 
 		expect(runner.reapStuck()).toBe(0);

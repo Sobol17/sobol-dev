@@ -27,7 +27,6 @@ export default defineConfig({
 			PUBLIC_SITE_URL: 'http://localhost:4173',
 			SESSION_SECRET: 'e2e-session-secret-not-used-in-production-00',
 			IP_HASH_SALT: 'e2e-ip-hash-salt-not-used-in-production-0000',
-			UPLOADS_DIR: './var/e2e/uploads',
 			USE_FAKE_CLIENTS: 'true',
 			TELEGRAM_OWNER_CHAT_ID: 'fake-owner-chat',
 			ORIGIN: 'http://localhost:4173',

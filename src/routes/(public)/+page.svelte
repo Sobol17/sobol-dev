@@ -1,20 +1,18 @@
 <script lang="ts">
-	import ProjectCard from '$lib/components/project-card.svelte';
+	import { SITE } from '$lib/site';
 	import Section from '$lib/components/section.svelte';
 	import SeoHead from '$lib/components/seo-head.svelte';
-	import { Button, cn } from '$lib/ui';
-	import type { ProjectCategory } from '$lib/types';
-	import type { PageProps } from './$types';
-	import { DIRECTIONS, FAQ, FAQ_INTRO, FINAL_CTA, HERO, PROCESS } from './landing-content';
-
-	let { data }: PageProps = $props();
+	import { Button, Card, cn } from '$lib/ui';
+	import type { LeadType } from '$lib/types';
+	type DirectionId = Exclude<LeadType, 'other'>;
+	import { CASES, DIRECTIONS, FAQ, FAQ_INTRO, FINAL_CTA, HERO, PROCESS } from './landing-content';
 
 	/**
 	 * Hero backdrop: one outlined canvas per direction, in the proportion that direction ships in.
 	 * The geometry lives here, the words stay in `landing-content.ts`.
 	 */
 	const HERO_FRAMES: Record<
-		ProjectCategory,
+		DirectionId,
 		{ place: string; tilt: string; box: string; label: string; delay: string }
 	> = {
 		web: {
@@ -40,7 +38,7 @@
 		}
 	};
 
-	const HERO_FRAME_LABELS: { id: ProjectCategory; meta: string }[] = [
+	const HERO_FRAME_LABELS: { id: DirectionId; meta: string }[] = [
 		{ id: 'web', meta: 'в браузере' },
 		{ id: 'mobile', meta: 'на устройстве' },
 		{ id: 'tma', meta: 'в Telegram' }
@@ -49,7 +47,7 @@
 	const jsonLd = {
 		'@context': 'https://schema.org',
 		'@type': 'ProfessionalService',
-		name: 'SobolDev',
+		name: SITE.name,
 		description: HERO.lead,
 		areaServed: 'RU',
 		serviceType: DIRECTIONS.map((direction) => direction.title)
@@ -57,7 +55,7 @@
 </script>
 
 <SeoHead
-	title="SobolDev — веб-сервисы и Telegram Mini Apps для бизнеса"
+	title={`${SITE.name} — веб-сервисы и Telegram Mini Apps для бизнеса`}
 	description="Проектирование и разработка веб-сервисов и Telegram Mini Apps для малого и среднего бизнеса: продажи, запись, клиентский сервис и интеграции."
 	image="/og-home.png"
 	{jsonLd}
@@ -122,7 +120,7 @@
 
 		<div class="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
 			<Button href="/lead" size="lg" class="w-full sm:w-auto">{HERO.primaryCta}</Button>
-			<Button href="/cases" variant="secondary" size="lg" class="w-full sm:w-auto">
+			<Button href="#cases" variant="secondary" size="lg" class="w-full sm:w-auto">
 				{HERO.secondaryCta}
 			</Button>
 		</div>
@@ -140,29 +138,14 @@
 	</div>
 </section>
 
-{#if data.featured.length > 0}
-	<Section
-		id="cases"
-		tone="dark"
-		eyebrow="Выбор работ"
-		title="Проекты"
-		lead="Задача и решение — в каждом кейсе. Показываем то, что уже сделано."
-	>
-		<ul class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-			{#each data.featured as project (project.id)}
-				<li><ProjectCard {project} tone="dark" /></li>
-			{/each}
-		</ul>
-		<div class="mt-8">
-			<a
-				href="/cases"
-				class="inline-flex items-center gap-2 border-b border-accent-bright pb-1 text-[14px] font-medium text-accent-bright hover:text-white"
-			>
-				Все работы <span aria-hidden="true">↗</span>
-			</a>
-		</div>
-	</Section>
-{/if}
+<Section id="cases" title="Примеры сервисов" lead="Концепты интерфейсов, не клиентские кейсы">
+	<div class="grid gap-6 md:grid-cols-2">
+		{#each CASES as item (item.id)}<Card
+				><h3 class="text-2xl">{item.title}</h3>
+				<p class="mt-4 text-muted">{item.description}</p></Card
+			>{/each}
+	</div>
+</Section>
 
 <Section
 	id="services"

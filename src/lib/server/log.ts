@@ -1,7 +1,7 @@
 import pino, { type Logger } from 'pino';
 
 /**
- * Structured logs, no PII. Lead bodies, contacts, session tokens and proposal tokens never
+ * Structured logs, no PII. Lead bodies, contacts, session tokens never
  * reach a log line: redaction here is the last defence, the call sites are the first.
  */
 export function createLogger(level: pino.LevelWithSilent = 'info'): Logger {

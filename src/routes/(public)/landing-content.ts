@@ -1,10 +1,11 @@
-import type { ProjectCategory } from '$lib/types';
+import { SITE } from '$lib/site';
+import type { LeadType } from '$lib/types';
 
 export const HERO = {
 	eyebrow: 'Студия разработки',
 	titleStart: 'Сайты, приложения и',
 	titleAccent: 'Telegram Mini Apps',
-	lead: 'SobolDev — студия разработки. Проектируем интерфейсы, создаём веб-сервисы и Telegram Mini Apps для продаж, записи и работы с клиентами. Помогаем с запуском и поддержкой.',
+	lead: `${SITE.name} — студия разработки. Проектируем интерфейсы, создаём веб-сервисы и Telegram Mini Apps для продаж, записи и работы с клиентами. Помогаем с запуском и поддержкой.`,
 	primaryCta: 'Обсудить проект',
 	secondaryCta: 'Смотреть работы',
 	facts: [
@@ -15,7 +16,7 @@ export const HERO = {
 } as const;
 
 export interface Direction {
-	id: ProjectCategory;
+	id: Exclude<LeadType, 'other'>;
 	title: string;
 	description: string;
 	bullets: string[];
@@ -75,7 +76,7 @@ export const FAQ_INTRO = {
 	title: 'Частые вопросы',
 	text: 'Если задача пока не сформулирована до деталей, начнём с разговора.',
 	contactLabel: 'Написать в Telegram ↗',
-	contactHref: 'https://t.me/soboldev'
+	contactHref: SITE.telegram.href
 } as const;
 
 export interface FaqItem {
@@ -110,3 +111,16 @@ export const FINAL_CTA = {
 	text: 'Расскажите, что нужно изменить в вашем бизнесе. Поможем определить первый разумный шаг.',
 	button: 'Обсудить проект'
 } as const;
+
+export const CASES = [
+	{
+		id: 'orders',
+		title: 'Заказы и клиенты в одном окне',
+		description: 'Концепт интерфейса: команда видит новые заказы, статусы и контакты клиентов.'
+	},
+	{
+		id: 'booking',
+		title: 'Запись на услуги в Telegram',
+		description: 'Концепт интерфейса: клиент выбирает услугу и свободное время без переписки.'
+	}
+];

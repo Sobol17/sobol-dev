@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { SITE } from '$lib/site';
 	import Logo from '$lib/components/logo.svelte';
 	import { Button, PUBLIC_NAV } from '$lib/ui';
 
@@ -20,7 +21,7 @@
 			<a href="/" class="flex shrink-0 items-center gap-2.5">
 				<Logo class="size-6 text-ink" />
 				<span class="font-display text-[17px] tracking-[-.02em]" style="font-weight:700">
-					SobolDev
+					{SITE.name}
 				</span>
 			</a>
 
@@ -81,22 +82,22 @@
 		<div class="flex items-center gap-2.5">
 			<Logo class="size-5 text-ink" />
 			<span class="font-display text-[16px] tracking-[-.02em]" style="font-weight:700">
-				SobolDev
+				{SITE.name}
 			</span>
 		</div>
 
 		<div class="flex flex-wrap gap-x-8 gap-y-3 text-[13px]">
 			<a
-				href="https://t.me/soboldev"
+				href={SITE.telegram.href}
 				target="_blank"
 				rel="noopener"
-				class="text-muted transition hover:text-ink">@soboldev</a
+				class="text-muted transition hover:text-ink">{SITE.telegram.handle}</a
 			>
-			<a href="mailto:hello@soboldev.ru" class="text-muted transition hover:text-ink">
-				hello@soboldev.ru
+			<a href={`mailto:${SITE.email}`} class="text-muted transition hover:text-ink">
+				{SITE.email}
 			</a>
 		</div>
 
-		<p class="text-[12px] text-muted">© 2026 SobolDev</p>
+		<p class="text-[12px] text-muted">© 2026 {SITE.name}</p>
 	</div>
 </footer>

@@ -5,7 +5,6 @@ export { default as Field } from './field/field.svelte';
 export { default as Select } from './select/select.svelte';
 export { default as RadioCards } from './radio-cards/radio-cards.svelte';
 export { default as Checkbox } from './checkbox/checkbox.svelte';
-export { default as FileDrop } from './file-drop/file-drop.svelte';
 export { default as Badge } from './badge/badge.svelte';
 export { default as Card } from './card/card.svelte';
 export { default as Dialog } from './dialog/dialog.svelte';

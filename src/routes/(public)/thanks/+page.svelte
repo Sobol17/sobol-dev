@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { SITE } from '$lib/site';
 	import { page } from '$app/state';
 	import SeoHead from '$lib/components/seo-head.svelte';
 	import { Button } from '$lib/ui';
@@ -7,7 +8,7 @@
 </script>
 
 <SeoHead
-	title="Заявка отправлена — SobolDev"
+	title={`Заявка отправлена — ${SITE.name}`}
 	description="Заявка принята. Ответим по указанному контакту в течение рабочего дня."
 	noindex
 />
@@ -29,10 +30,10 @@
 				Изучим задачу и вернёмся с уточняющими вопросами в течение рабочего дня. Если срочно, пишите
 				в Telegram
 				<a
-					href="https://t.me/soboldev"
+					href={SITE.telegram.href}
 					target="_blank"
 					rel="noopener"
-					class="font-medium text-accent underline underline-offset-4">@soboldev</a
+					class="font-medium text-accent underline underline-offset-4">{SITE.telegram.handle}</a
 				>.
 			</p>
 

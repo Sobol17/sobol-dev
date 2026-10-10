@@ -1,9 +1,10 @@
 <script lang="ts">
+	import { SITE } from '$lib/site';
 	import { page } from '$app/state';
 	import { Button } from '$lib/ui';
 </script>
 
-<svelte:head><title>{page.status} — SobolDev</title></svelte:head>
+<svelte:head><title>{page.status} — {SITE.name}</title></svelte:head>
 
 <main class="grid min-h-screen place-items-center px-5">
 	<div class="max-w-[420px] text-center">

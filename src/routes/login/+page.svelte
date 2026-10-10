@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { SITE } from '$lib/site';
 	import SeoHead from '$lib/components/seo-head.svelte';
 	import Logo from '$lib/components/logo.svelte';
 	import { Button, Card, Field, Input } from '$lib/ui';
@@ -7,14 +8,18 @@
 	let { form }: { form: ActionData } = $props();
 </script>
 
-<SeoHead title="Вход — SobolDev" description="Административная панель SobolDev." noindex />
+<SeoHead
+	title={`Вход — ${SITE.name}`}
+	description={`Административная панель ${SITE.name}.`}
+	noindex
+/>
 
 <main class="grid min-h-screen place-items-center px-5 py-16">
 	<div class="w-full max-w-[420px]">
 		<div class="mb-8 flex items-center justify-center gap-2.5">
 			<Logo class="size-6 text-ink" />
 			<span class="font-display text-[17px] tracking-[-.02em]" style="font-weight:700">
-				SobolDev
+				{SITE.name}
 			</span>
 		</div>
 

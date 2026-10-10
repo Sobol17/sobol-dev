@@ -1,3 +1,4 @@
+import { createHandlers } from '$lib/server/queue/handlers';
 import { FakeNotifier } from '$lib/server/clients/notifier.fake';
 import { SqliteUnitOfWork } from '$lib/server/db/unit-of-work';
 import { FixedClock } from '$lib/server/domain/clock';
@@ -5,11 +6,8 @@ import { LeadService } from '$lib/server/domain/lead.service';
 import { RateLimitService } from '$lib/server/domain/rate-limit.service';
 import { LeadRepository } from '$lib/server/repositories/lead.repository';
 import { OutboxRepository } from '$lib/server/repositories/outbox.repository';
-import { leadSubmittedHandler } from '$lib/server/queue/handlers/lead-submitted';
-import { outboxDispatchHandler } from '$lib/server/queue/handlers/outbox-dispatch';
 import { SqliteJobQueue } from '$lib/server/queue/queue';
-import { JobRunner, type JobHandlers } from '$lib/server/queue/runner';
-import { TOPICS } from '$lib/server/queue/topics';
+import { JobRunner } from '$lib/server/queue/runner';
 import { createLogger } from '$lib/server/log';
 import type { LeadInput, RequestMeta } from '$lib/types';
 import { createTestDb, type TestDb } from './db';
@@ -31,17 +29,16 @@ export function createLeadSlice(now = new Date('2026-03-01T10:00:00.000Z')) {
 
 	const leads = new LeadService(leadRepository, queue, uow, new RateLimitService(clock), clock);
 
-	const handlers: JobHandlers = {
-		[TOPICS.LEAD_SUBMITTED]: leadSubmittedHandler({
-			leads: leadRepository,
-			outbox: outboxRepository,
-			queue,
-			uow,
-			ownerChatId: OWNER_CHAT_ID,
-			siteUrl: SITE_URL
-		}),
-		[TOPICS.OUTBOX_DISPATCH]: outboxDispatchHandler({ outbox: outboxRepository, notifier, clock })
-	};
+	const handlers = createHandlers({
+		leads: leadRepository,
+		outbox: outboxRepository,
+		queue,
+		uow,
+		notifier,
+		clock,
+		ownerChatId: OWNER_CHAT_ID,
+		siteUrl: SITE_URL
+	});
 
 	const runner = new JobRunner(db.db, handlers, log, { clock: () => clock.now() });
 

@@ -8,8 +8,7 @@ export interface RateLimitPolicy {
 /** Single source for every rate limit in the product. */
 export const RATE_LIMITS = {
 	login: { limit: 5, windowMs: 15 * 60 * 1000 },
-	leadSubmit: { limit: 3, windowMs: 60 * 60 * 1000 },
-	proposalView: { limit: 30, windowMs: 60 * 60 * 1000 }
+	leadSubmit: { limit: 3, windowMs: 60 * 60 * 1000 }
 } as const satisfies Record<string, RateLimitPolicy>;
 
 /**

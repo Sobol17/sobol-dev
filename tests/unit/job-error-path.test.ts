@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { jobs, outboxMessages } from '$lib/server/db/schema';
+import { JobRunner } from '$lib/server/queue/runner';
+import { createLogger } from '$lib/server/log';
 import { TOPICS } from '$lib/server/queue/topics';
 import { createLeadSlice, leadInput, requestMeta } from '../helpers/lead-slice';
 
@@ -71,11 +73,13 @@ describe('outbox.dispatch error path', () => {
 
 	it('fails the job when no handler owns the topic', async () => {
 		slice = createLeadSlice();
-		slice.queue.publish(TOPICS.MEDIA_PROCESS, { mediaId: 'missing' });
+		slice.queue.publish(TOPICS.LEAD_SUBMITTED, { leadId: 'missing' });
 
-		await slice.runner.drain();
+		await new JobRunner(slice.db.db, {}, createLogger('silent'), {
+			clock: () => slice!.clock.now()
+		}).drain();
 
-		const job = slice.db.db.select().from(jobs).where(eq(jobs.topic, TOPICS.MEDIA_PROCESS)).get();
+		const job = slice.db.db.select().from(jobs).where(eq(jobs.topic, TOPICS.LEAD_SUBMITTED)).get();
 		expect(job?.status).toBe('pending');
 		expect(job?.lastError).toContain('no handler registered');
 	});

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { SITE } from '$lib/site';
 	import { onMount, untrack } from 'svelte';
 	import SeoHead from '$lib/components/seo-head.svelte';
 	import { Button, Field, Input, RadioCards, Select, Stepper, Textarea } from '$lib/ui';
@@ -82,7 +83,7 @@
 </script>
 
 <SeoHead
-	title="Бриф — SobolDev"
+	title={`Бриф — ${SITE.name}`}
 	description="Расскажите о задаче для веба или Telegram. Уточним детали и подготовим план первого релиза."
 />
 
