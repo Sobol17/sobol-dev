@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { building } from '$app/environment';
+	import { base } from '$app/paths';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import Section from '$lib/components/section.svelte';
 	import Arrow from '$lib/components/arrow.svelte';
@@ -6,10 +8,10 @@
 	import { page } from '$app/state';
 	import { CASES, LABELS } from '../landing-content';
 	const briefHref = (type: string) => {
-		const params = new SvelteURLSearchParams(page.url.search);
+		const params = new SvelteURLSearchParams(building ? '' : page.url.search);
 		params.delete('/remote');
 		params.set('type', type);
-		return `/?${params}#brief`;
+		return `${base}/?${params}#brief`;
 	};
 </script>
 
@@ -21,11 +23,11 @@
 					<picture
 						><source
 							type="image/avif"
-							srcset={item.cover.avif}
+							srcset={item.cover.avif.replaceAll('/cases/', `${base}/cases/`)}
 							sizes="(max-width: 767px) 100vw, 50vw"
 						/><img
-							src={item.cover.src}
-							srcset={item.cover.webp}
+							src={`${base}${item.cover.src}`}
+							srcset={item.cover.webp.replaceAll('/cases/', `${base}/cases/`)}
 							sizes="(max-width: 767px) 100vw, 50vw"
 							alt={item.cover.alt}
 							width={item.cover.width}

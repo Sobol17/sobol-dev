@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { SITE } from '$lib/site';
 	import { page } from '$app/state';
 	import PublicShell from '$lib/components/public-shell.svelte';
@@ -21,8 +22,8 @@
 						: 'Попробуйте открыть её позже. Если ошибка повторяется, напишите нам и укажите код обращения ниже.'}
 				</p>
 				<div class="mt-10 flex flex-wrap gap-4">
-					<Button href="/" size="lg">На главную <Arrow /></Button>
-					<Button href="/#brief" variant="secondary" size="lg">Обсудить проект</Button>
+					<Button href={`${base}/`} size="lg">На главную <Arrow /></Button>
+					<Button href={`${base}/#brief`} variant="secondary" size="lg">Обсудить проект</Button>
 				</div>
 				{#if !missing && page.error?.requestId}
 					<p class="mt-8 text-sm leading-relaxed text-muted">

@@ -33,3 +33,7 @@ test-results
 # Test artifacts
 /playwright-report
 /blob-report
+
+# Static demonstration build
+/build-demo
+/.svelte-kit-demo
