@@ -39,3 +39,19 @@ export const leads: LeadListItem[] = [
 		createdAt: '2026-10-06T06:10:00.000Z'
 	}
 ];
+
+export const leadDetails = leads.map((lead) => ({
+	...lead,
+	goal: lead.goalExcerpt,
+	budget: 'unknown' as const,
+	timeline: 'unknown' as const,
+	contactEmail: `demo${lead.publicId.slice(-2)}@example.com`,
+	contactTelegram: null,
+	utm: {},
+	referrer: null,
+	ipHash: null,
+	userAgent: null,
+	spamScore: 0,
+	createdAt: new Date(lead.createdAt),
+	updatedAt: new Date(lead.createdAt)
+}));

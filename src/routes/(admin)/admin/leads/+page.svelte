@@ -19,6 +19,10 @@
 	import { listUrl } from './list-url';
 	import LeadRows from '../../_components/lead-rows.svelte';
 	import QuickStatus from './_components/quick-status.svelte';
+	import LeadPanel from './_components/lead-panel.svelte';
+	import type { LeadListItem } from '$lib/types';
+	let selected = $state<LeadListItem | null>(null);
+	let panelOpen = $state(false);
 	import type { PageProps } from './$types';
 	let { data }: PageProps = $props();
 	const results = $derived(listLeads(data.filters));
@@ -115,7 +119,17 @@
 		</div>
 		{#if result.leads.length}
 			<LeadRows leads={result.leads} interactive>
-				{#snippet action(lead)}<QuickStatus {lead} list={results} />{/snippet}
+				{#snippet action(lead)}<div class="grid gap-2">
+						<Button
+							variant="ghost"
+							size="sm"
+							aria-label={`Подробнее о ${lead.publicId}`}
+							onclick={() => {
+								selected = lead;
+								panelOpen = true;
+							}}>Подробнее</Button
+						><QuickStatus {lead} list={results} />
+					</div>{/snippet}
 			</LeadRows>
 		{:else}
 			<Card padding="sm"
@@ -144,3 +158,5 @@
 		</EmptyState>
 	</div>
 {/await}
+
+{#if selected}<LeadPanel id={selected.id} publicId={selected.publicId} bind:open={panelOpen} />{/if}
