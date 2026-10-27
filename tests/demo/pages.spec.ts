@@ -78,3 +78,32 @@ test('unknown demo routes show the shared 404 and a working home link', async ({
 	await page.getByRole('link', { name: 'На главную' }).click();
 	await expect(page).toHaveURL(/\/sobol-dev\/$/);
 });
+
+for (const width of [1440, 360]) {
+	test(`lead details open in a right panel at ${width}px`, async ({ page }) => {
+		await page.setViewportSize({ width, height: 900 });
+		await page.goto('./admin/');
+		const opener = page.getByRole('button', { name: 'Подробнее о DEMO01', exact: true });
+		await opener.click();
+		const panel = page.getByRole('dialog', { name: 'Заявка DEMO01', exact: true });
+		await expect(panel).toBeVisible();
+		await expect(panel).toContainText('Объединить заказы');
+		await expect(panel).toContainText('Бюджет');
+		await expect(panel).toContainText('Заметки');
+		const bounds = await panel.boundingBox();
+		expect(bounds).not.toBeNull();
+		expect(Math.abs(bounds!.x + bounds!.width - width)).toBeLessThanOrEqual(1);
+		expect(bounds!.height).toBe(900);
+		expect(await panel.evaluate((node) => node.scrollWidth - node.clientWidth)).toBeLessThanOrEqual(
+			1
+		);
+		await page.keyboard.press('Escape');
+		await expect(panel).toBeHidden();
+		await expect(opener).toBeFocused();
+		await page.getByRole('button', { name: 'Подробнее о DEMO02', exact: true }).click();
+		await expect(page.getByRole('dialog')).toContainText('Студия занятий');
+		await page.getByRole('button', { name: 'Закрыть', exact: true }).click();
+		await expect(page.getByRole('dialog')).toBeHidden();
+		await expect(page).toHaveURL(/\/admin\/$/);
+	});
+}
