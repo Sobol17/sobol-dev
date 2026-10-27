@@ -968,3 +968,15 @@ export const LEAD_TRANSITIONS: Record<LeadStatus, readonly LeadStatus[]> = {
 **Приёмка подготовки A5.** Приложение собирается и принимает заявки без настроек Telegram; никакие задачи уведомлений не создаются. Тесты проверяют сохранность существующих строк, бэкап активного WAL, восстановление заявки и заметки, откат при неуспешном health-check и сохранение рабочего релиза при ошибке сборки. В репозитории лежат конфигурации Caddy и systemd, таймер бэкапа, скрипты выкладки и отката и инструкция первоначального запуска. CI проверяет синтаксис скриптов, unit-файлы и Caddyfile. Реальный деплой и smoke под доменом остаются отдельным шагом после подготовки сервера.
 
 Конец дополнения v6.
+
+---
+
+## 21. Lead detail side panel (v7)
+
+Core version: v7. Changelog: add an optional right placement to `Dialog`, approved by the owner on 27 October 2026. All other v6 contracts remain unchanged.
+
+Extend the section 9 `Dialog` props with `placement?: 'center' | 'right'`. Default to `center` to preserve existing dialogs. With `right`, attach the panel to the right viewport edge, use the full viewport height and constrain its desktop width. Use the full width on narrow screens. Keep the title, description, children, footer and bindable `open` contracts.
+
+Animate entry and exit with Svelte transitions. Respect reduced motion. Keep keyboard focus inside the open dialog, support Escape and overlay dismissal, and restore focus to the opener. Keep the close control available while the body scrolls.
+
+Open lead details from the list without resetting filters or pagination. Keep the existing `/admin/leads/[id]` route for direct links. Show the existing lead fields, status and notes; do not add database fields or change status transitions. The Pages demo uses fictional data and remains read-only.

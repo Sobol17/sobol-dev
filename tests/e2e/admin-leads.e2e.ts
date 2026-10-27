@@ -173,3 +173,29 @@ test('each remote function rejects anonymous calls and revoked sessions', async 
 		await revoked.dispose();
 	}
 });
+
+test('lead panel preserves filters and saves notes without leaving the list', async ({ page }) => {
+	await page.setViewportSize({ width: 1440, height: 900 });
+	await loginAsAdmin(page);
+	await page.goto('/admin/leads?search=A4%20Клиент%2018');
+	const listUrl = page.url();
+	const opener = page.getByRole('button', { name: /^Подробнее о/ });
+	await opener.click();
+	const panel = page.getByRole('dialog');
+	await expect(panel.getByRole('heading', { name: 'A4 Клиент 18', exact: true })).toBeVisible();
+	await panel.getByLabel('Новая заметка').fill('Panel follow-up');
+	await panel.getByRole('button', { name: 'Добавить заметку', exact: true }).click();
+	await expect(panel.getByRole('list', { name: 'История заметок' })).toContainText(
+		'Panel follow-up'
+	);
+	await page.keyboard.press('Escape');
+	await expect(panel).toBeHidden();
+	await expect(opener).toBeFocused();
+	await expect(page).toHaveURL(listUrl);
+	await opener.click();
+	await expect(panel.getByRole('list', { name: 'История заметок' })).toContainText(
+		'Panel follow-up'
+	);
+	await panel.getByRole('link', { name: 'Открыть отдельной страницей' }).click();
+	await expect(page).toHaveURL(/\/admin\/leads\/[a-f0-9-]+$/);
+});

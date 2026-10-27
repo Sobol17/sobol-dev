@@ -1,12 +1,15 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import { SITE } from '$lib/site';
 	import SeoHead from '$lib/components/seo-head.svelte';
 	import { Button, Card, EmptyState } from '$lib/ui';
 	import type { LeadListItem } from '$lib/types';
 	import { base } from '$app/paths';
 	let {
-		data
+		data,
+		action
 	}: {
+		action?: Snippet<[LeadListItem]>;
 		data: { leads: LeadListItem[]; stats: { leads: number; newLeads: number } };
 	} = $props();
 	import LeadRows from './lead-rows.svelte';
@@ -50,7 +53,7 @@
 		<p class="text-sm text-muted">Показано {data.leads.length} из {data.stats.leads}</p>
 	</div>
 	{#if data.leads.length}
-		<LeadRows leads={data.leads} />
+		<LeadRows leads={data.leads} {action} />
 	{:else}
 		<Card class="p-0"
 			><EmptyState

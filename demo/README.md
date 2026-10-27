@@ -4,6 +4,7 @@ This build publishes the landing and the CRM interface with fictional leads. It 
 
 - Landing: https://sobol17.github.io/sobol-dev/
 - CRM: https://sobol17.github.io/sobol-dev/admin/
+- Open Details on a lead to inspect it in a right panel. The demo remains read-only; the server CRM supports status changes and notes inside the same panel.
 - The brief validates in the browser and opens a labelled demonstration result. It never sends or stores the entered values.
 - A visible demo bar and noindex metadata distinguish this build from the server application.
 - The normal build still uses adapter-node. BUILD_DEMO selects separate routes, output and adapter-static.

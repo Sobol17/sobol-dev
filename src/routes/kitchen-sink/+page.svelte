@@ -29,6 +29,7 @@
 	let tab = $state('all');
 	let page = $state(2);
 	let dialogOpen = $state(false);
+	let panelOpen = $state(false);
 
 	const options = [
 		{ value: 'web', label: 'Веб' },
@@ -188,3 +189,12 @@
 		</Dialog>
 	</section>
 </div>
+
+<Button onclick={() => (panelOpen = true)}>Открыть боковую панель</Button>
+<Dialog
+	bind:open={panelOpen}
+	placement="right"
+	title="Боковая панель"
+	description="Дополнительная информация без ухода со страницы."
+	><p>Панель закрывается кнопкой, по Escape или нажатием на фон.</p></Dialog
+>
